@@ -1042,7 +1042,6 @@ fun CurrencySelectionScreen() {
     val context = LocalContext.current
     var selectedCurrency by remember { mutableStateOf<Currency?>(null) }
 
-    // List of currencies from around the globe
     val currencies = listOf(
         Currency("USD", "United States Dollar", "$"),
         Currency("EUR", "Euro", "€"),
@@ -1067,14 +1066,12 @@ fun CurrencySelectionScreen() {
         Currency("DKK", "Danish Krone", "kr"),
         Currency("PLN", "Polish Złoty", "zł"),
         Currency("HKD", "Hong Kong Dollar", "HK$"),
-        Currency("THB", "Thai Baht", "฿"),
-        Currency("IDR", "Indonesian Rupiah", "Rp"),
-        Currency("MYR", "Malaysian Ringgit", "RM"),
-        Currency("PHP", "Philippine Peso", "₱"),
-        Currency("VND", "Vietnamese Dong", "₫"),
-        Currency("EGP", "Egyptian Pound", "E£"),
-        Currency("NZD", "New Zealand Dollar", "NZ$")
-    )
+        Currency("THB", "Thai Baht", "฿")
+//        Currency("IDR", "Indonesian Rupiah", "Rp")
+
+
+        )
+
 
     Scaffold(
         containerColor = Color.White
@@ -1090,7 +1087,6 @@ fun CurrencySelectionScreen() {
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Title
                 Text(
                     text = "Select Your Currency",
                     style = MaterialTheme.typography.headlineMedium,
@@ -1101,7 +1097,6 @@ fun CurrencySelectionScreen() {
                     textAlign = TextAlign.Center
                 )
 
-                // Currency Grid
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
                     contentPadding = PaddingValues(8.dp),
@@ -1119,38 +1114,31 @@ fun CurrencySelectionScreen() {
                     }
                 }
 
-                // Spacer to push proceed button down
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Always visible Proceed Button
-                Button(
-                    onClick = {
-                        // Navigate to next screen with selected currency
-                        val intent = Intent(context, LetsSetupPage::class.java)
-                        intent.putExtra("SELECTED_CURRENCY", selectedCurrency?.code)
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(bottom = 16.dp),
-                    enabled = selectedCurrency != null,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF6C63FF),
-                        contentColor = Color.White,
-                        disabledContainerColor = Color.Gray.copy(alpha = 0.3f),
-                        disabledContentColor = Color.Gray
-                    ),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = if (selectedCurrency != null)
-                            "Proceed with ${selectedCurrency?.code}"
-                        else
-                            "Select a Currency to Proceed",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                if (selectedCurrency != null) {
+                    Button(
+                        onClick = {
+                            val intent = Intent(context, Homescreen::class.java)
+                            intent.putExtra("SELECTED_CURRENCY", selectedCurrency?.code)
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .padding(bottom = 16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF6C63FF),
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = "Continue with ${selectedCurrency?.code}",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -1191,4 +1179,3 @@ fun CurrencyCapsuleButton(
         }
     }
 }
-
