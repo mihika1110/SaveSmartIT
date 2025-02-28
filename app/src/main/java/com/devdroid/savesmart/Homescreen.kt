@@ -2,14 +2,17 @@ package com.devdroid.savesmart
 
 //package com.example.home
 
+import android.os.Build
 import android.os.Bundle
 import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,10 +28,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.devdroid.savesmart.ui.theme.SaveSmartTheme
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.devdroid.savesmart.IncomeScreen
+import com.devdroid.savesmart.ExpenseScreen
+//import com.example.expensescreen.ExpenseScreen
+
 
 //import com.example.home.ui.theme.HOMETheme
 
 class Homescreen : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -40,27 +53,56 @@ class Homescreen : ComponentActivity() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun FinanceTrackerScreen() {
+    val navController = rememberNavController()
+    var totalIncome by remember { mutableStateOf(0) }
+    var totalExpenses by remember { mutableStateOf(0) }
     Scaffold(
         bottomBar = { BottomNavigation() }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-//                .background(Color(0xFFF0FFF0))
-                .background(Color.Black)
-                .padding(paddingValues)
-                .padding(16.dp)
+        NavHost(
+            navController = navController,
+            startDestination = "home"
         ) {
-            TopBar()
-            AccountBalance(balance = 0)
-            IncomeExpenseRow(income = 0, expenses = 0)
-            SpendFrequencySection()
-            RecentTransactionsSection()
+            composable("home") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black)
+                        .padding(paddingValues)
+                        .padding(16.dp)
+                ) {
+                    TopBar()
+                    AccountBalance(balance = totalIncome - totalExpenses)
+                    IncomeExpenseRow(income = totalIncome, expenses = totalExpenses, navController)
+                    SpendFrequencySection()
+                    RecentTransactionsSection()
+                }
+            }
+
+            composable("income") {
+                // Pass the income updater function
+                IncomeScreen(
+                    navController = navController,
+                    onAmountAdded = { amount ->
+                        totalIncome += amount
+                    }
+                )
+            }
+            composable("expense") {
+                ExpenseScreen(
+                    navController = navController,
+                    onAmountAdded = { amount ->
+                        totalExpenses += amount
+                    }
+                )
+            }
         }
     }
 }
+
 
 @Composable
 fun TopBar() {
@@ -177,7 +219,7 @@ fun AccountBalance(balance: Int) {
 }
 
 @Composable
-fun IncomeExpenseRow(income: Int, expenses: Int) {
+fun IncomeExpenseRow(income: Int, expenses: Int, navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -187,7 +229,8 @@ fun IncomeExpenseRow(income: Int, expenses: Int) {
         Card(
             modifier = Modifier
                 .weight(1f)
-                .padding(end = 8.dp),
+                .padding(end = 8.dp)
+                .clickable { navController.navigate("income") }, // Navigate to IncomeScreen
             colors = CardDefaults.cardColors(
                 containerColor = Color(0xFF4CAF50)
             )
@@ -211,7 +254,8 @@ fun IncomeExpenseRow(income: Int, expenses: Int) {
         Card(
             modifier = Modifier
                 .weight(1f)
-                .padding(start = 8.dp),
+                .padding(start = 8.dp)
+                .clickable { navController.navigate("expense") }, // Navigate to ExpenseScreen
             colors = CardDefaults.cardColors(
                 containerColor = Color(0xFFFF5252)
             )

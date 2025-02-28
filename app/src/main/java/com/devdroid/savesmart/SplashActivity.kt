@@ -19,17 +19,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
-class SplashActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            SplashScreen(onTimeout = {
-                startActivity(Intent(this, OnboardingActivity::class.java))
-                finish()
-            })
-        }
-    }
-}
+//class SplashActivity : ComponentActivity() {
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//        setContent {
+//            SplashScreen(onTimeout = {
+//                startActivity(Intent(this, OnboardingActivity::class.java))
+//                finish()
+//            })
+//        }
+//    }
+//}
 
 @Composable
 fun SplashScreen(onTimeout: () -> Unit) {
