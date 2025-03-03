@@ -53,6 +53,57 @@ class Homescreen : ComponentActivity() {
     }
 }
 
+//@RequiresApi(Build.VERSION_CODES.O)
+//@Composable
+//fun FinanceTrackerScreen() {
+//    val navController = rememberNavController()
+//    var totalIncome by remember { mutableStateOf(0) }
+//    var totalExpenses by remember { mutableStateOf(0) }
+//    Scaffold(
+//        bottomBar = { BottomNavigation() }
+//    ) { paddingValues ->
+//        NavHost(
+//            navController = navController,
+//            startDestination = "home"
+//        ) {
+//            composable("home") {
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .background(Color.Black)
+//                        .padding(paddingValues)
+//                        .padding(16.dp)
+//                ) {
+//                    TopBar()
+//                    AccountBalance(balance = totalIncome - totalExpenses)
+//                    IncomeExpenseRow(income = totalIncome, expenses = totalExpenses, navController)
+//                    SpendFrequencySection()
+//                    RecentTransactionsSection()
+//                }
+//            }
+//
+//            composable("income") {
+//                // Pass the income updater function
+//                IncomeScreen(
+//                    navController = navController,
+//                    onAmountAdded = { amount ->
+//                        totalIncome += amount
+//                    }
+//                )
+//            }
+//            composable("expense") {
+//                ExpenseScreen(
+//                    navController = navController,
+//                    onAmountAdded = { amount ->
+//                        totalExpenses += amount
+//                    }
+//                )
+//            }
+//        }
+//    }
+//}
+
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun FinanceTrackerScreen() {
@@ -60,7 +111,7 @@ fun FinanceTrackerScreen() {
     var totalIncome by remember { mutableStateOf(0) }
     var totalExpenses by remember { mutableStateOf(0) }
     Scaffold(
-        bottomBar = { BottomNavigation() }
+        bottomBar = { BottomNavigation(navController = navController) } // Pass navController here
     ) { paddingValues ->
         NavHost(
             navController = navController,
@@ -99,7 +150,50 @@ fun FinanceTrackerScreen() {
                     }
                 )
             }
+
+            // Add profile route
+            composable("profile") {
+                ProfileScreen(
+                    onAccountClick = {},
+                    onSettingsClick = {},
+                    onExportDataClick = {},
+                    onLogoutClick = {}
+                )
+            }
         }
+    }
+}
+
+@Composable
+fun BottomNavigation(navController: NavController) { // Add NavController parameter
+    NavigationBar(
+        modifier = Modifier.fillMaxWidth(),
+        containerColor = Color(0xFFFFFFFF)
+    ) {
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+            label = { Text("Home") },
+            selected = true,
+            onClick = { navController.navigate("home") }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.List, contentDescription = "Transaction") },
+            label = { Text("Transaction") },
+            selected = false,
+            onClick = { /* TODO */ }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Add, contentDescription = "Add") },
+            label = { Text("Add") },
+            selected = false,
+            onClick = { /* TODO */ }
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+            label = { Text("Profile") },
+            selected = false,
+            onClick = { navController.navigate("profile") } // Now this should work
+        )
     }
 }
 
@@ -436,44 +530,44 @@ fun TransactionItem(
     }
 }
 
-@Composable
-fun BottomNavigation() {
-    NavigationBar(
-        modifier = Modifier.fillMaxWidth(),
-        containerColor = Color(0xFFFFFFFF)
-    ) {
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-            label = { Text("Home") },
-            selected = true,
-            onClick = { /* TODO */ }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.List, contentDescription = "Transaction") },
-            label = { Text("Transaction") },
-            selected = false,
-            onClick = { /* TODO */ }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Add, contentDescription = "Add") },
-            label = { Text("Add") },
-            selected = false,
-            onClick = { /* TODO */ }
-        )
+//@Composable
+//fun BottomNavigation() {
+//    NavigationBar(
+//        modifier = Modifier.fillMaxWidth(),
+//        containerColor = Color(0xFFFFFFFF)
+//    ) {
 //        NavigationBarItem(
-//            icon = { Icon(Icons.Default.PieChart, contentDescription = "Budget") },
-//            label = { Text("Budget") },
+//            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+//            label = { Text("Home") },
+//            selected = true,
+//            onClick = { /* TODO */ }
+//        )
+//        NavigationBarItem(
+//            icon = { Icon(Icons.Default.List, contentDescription = "Transaction") },
+//            label = { Text("Transaction") },
 //            selected = false,
 //            onClick = { /* TODO */ }
 //        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-            label = { Text("Profile") },
-            selected = false,
-            onClick = { /* TODO */ }
-        )
-    }
-}
+//        NavigationBarItem(
+//            icon = { Icon(Icons.Default.Add, contentDescription = "Add") },
+//            label = { Text("Add") },
+//            selected = false,
+//            onClick = { /* TODO */ }
+//        )
+////        NavigationBarItem(
+////            icon = { Icon(Icons.Default.PieChart, contentDescription = "Budget") },
+////            label = { Text("Budget") },
+////            selected = false,
+////            onClick = { /* TODO */ }
+////        )
+//        NavigationBarItem(
+//            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+//            label = { Text("Profile") },
+//            selected = false,
+//            onClick = { NavController.navigate("profile") }
+//        )
+//    }
+//}
 
 @Preview(showBackground = true)
 @Composable
