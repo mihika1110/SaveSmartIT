@@ -36,6 +36,10 @@ import androidx.navigation.compose.rememberNavController
 import com.devdroid.savesmart.IncomeScreen
 import com.devdroid.savesmart.ExpenseScreen
 //import com.example.expensescreen.ExpenseScreen
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.foundation.Canvas
+import androidx.navigation.compose.currentBackStackEntryAsState
 
 
 //import com.example.home.ui.theme.HOMETheme
@@ -110,8 +114,11 @@ fun FinanceTrackerScreen() {
     val navController = rememberNavController()
     var totalIncome by remember { mutableStateOf(0) }
     var totalExpenses by remember { mutableStateOf(0) }
+    val navBackStackEntry = navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry.value?.destination?.route ?: "home" // Default to home if null
+
     Scaffold(
-        bottomBar = { BottomNavigation(navController = navController) } // Pass navController here
+        bottomBar = { BottomNavigation(navController = navController, currentRoute = currentRoute) }
     ) { paddingValues ->
         NavHost(
             navController = navController,
@@ -121,7 +128,7 @@ fun FinanceTrackerScreen() {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black)
+                        .background(Color(0xFFF8F8F0)) // Light cream background from screenshot
                         .padding(paddingValues)
                         .padding(16.dp)
                 ) {
@@ -134,7 +141,6 @@ fun FinanceTrackerScreen() {
             }
 
             composable("income") {
-                // Pass the income updater function
                 IncomeScreen(
                     navController = navController,
                     onAmountAdded = { amount ->
@@ -151,7 +157,6 @@ fun FinanceTrackerScreen() {
                 )
             }
 
-            // Add profile route
             composable("profile") {
                 ProfileScreen(
                     onAccountClick = {},
@@ -165,34 +170,46 @@ fun FinanceTrackerScreen() {
 }
 
 @Composable
-fun BottomNavigation(navController: NavController) { // Add NavController parameter
-    NavigationBar(
-        modifier = Modifier.fillMaxWidth(),
-        containerColor = Color(0xFFFFFFFF)
+fun BottomNavigation(navController: NavController, currentRoute: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White),
+        horizontalArrangement = Arrangement.SpaceEvenly
     ) {
+        val selectedColor = Color(0xFF6949FF)
+        val defaultColor = Color.Gray
+
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-            label = { Text("Home") },
-            selected = true,
-            onClick = { navController.navigate("home") }
+            icon = { Icon(Icons.Default.Home, contentDescription = "Home", tint = if (currentRoute == "home") selectedColor else defaultColor) },
+            label = { Text("Home", color = if (currentRoute == "home") selectedColor else defaultColor) },
+            selected = currentRoute == "home",
+            onClick = { navController.navigate("home") },
+            modifier = Modifier.weight(1f)
         )
+
         NavigationBarItem(
-            icon = { Icon(Icons.Default.List, contentDescription = "Transaction") },
-            label = { Text("Transaction") },
-            selected = false,
-            onClick = { /* TODO */ }
+            icon = { Icon(Icons.Default.List, contentDescription = "Transactions", tint = if (currentRoute == "transactions") selectedColor else defaultColor) },
+            label = { Text("Transactions", color = if (currentRoute == "transactions") selectedColor else defaultColor) },
+            selected = currentRoute == "transactions",
+            onClick = { navController.navigate("transactions") },
+            modifier = Modifier.weight(1f)
         )
+
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Add, contentDescription = "Add") },
-            label = { Text("Add") },
-            selected = false,
-            onClick = { /* TODO */ }
+            icon = { Icon(Icons.Default.AccountBalanceWallet, contentDescription = "Budget", tint = if (currentRoute == "budget") selectedColor else defaultColor) },
+            label = { Text("Budget", color = if (currentRoute == "budget") selectedColor else defaultColor) },
+            selected = currentRoute == "budget",
+            onClick = { navController.navigate("budget") },
+            modifier = Modifier.weight(1f)
         )
+
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-            label = { Text("Profile") },
-            selected = false,
-            onClick = { navController.navigate("profile") } // Now this should work
+            icon = { Icon(Icons.Default.Person, contentDescription = "Profile", tint = if (currentRoute == "profile") selectedColor else defaultColor) },
+            label = { Text("Profile", color = if (currentRoute == "profile") selectedColor else defaultColor) },
+            selected = currentRoute == "profile",
+            onClick = { navController.navigate("profile") },
+            modifier = Modifier.weight(1f)
         )
     }
 }
@@ -204,21 +221,45 @@ fun TopBar() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.Start // Align content to the start
+        horizontalAlignment = Alignment.Start
     ) {
-        // "Hello Parul" aligned to the left
-        Text(
-            text = "Hello Parul,",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // User image on left - using Box instead of Image to avoid the unresolved reference
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color(0xFFE0E0E0), RoundedCornerShape(20.dp)) // Using RoundedCornerShape instead of CircleShape
+            ) {
+                // Avatar placeholder
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Profile",
+                    tint = Color.Gray,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .align(Alignment.Center)
+                )
+            }
 
-        // Center-aligned dropdown below "Hello Parul"
+            // Notification bell on right
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = "Notifications",
+                tint = Color(0xFF6949FF), // Purple notification bell
+                modifier = Modifier.size(28.dp)
+            )
+        }
+
+        // Month selector dropdown
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentWidth(Alignment.CenterHorizontally)
+                .padding(top = 16.dp)
         ) {
             MonthDropdown()
         }
@@ -227,42 +268,36 @@ fun TopBar() {
 
 @Composable
 fun MonthDropdown() {
-    var selectedMonth by remember { mutableStateOf("January") } // Initial selected month
+    var selectedMonth by remember { mutableStateOf("October") } // Initial selected month
     val months = listOf(
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     )
-    var expanded by remember { mutableStateOf(false) } // Dropdown state
+    var expanded by remember { mutableStateOf(false) }
 
     Box(
-        modifier = Modifier
-            .width(200.dp)
-//            .background(Color(0xFFFFFFFF
-//            ), shape = RoundedCornerShape(8.dp)) // Light background
-//            .border(1.dp, Color.Gray, RoundedCornerShape(8.dp)) // Optional border
+        modifier = Modifier.width(200.dp)
     ) {
-        OutlinedButton(
+        TextButton(
             onClick = { expanded = true },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
+            colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF6949FF))
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.Center
             ) {
-                // Display the selected month
                 Text(
                     text = selectedMonth,
-                    fontSize = 18.sp, // Larger font size
-                    color = Color(0xFF5555FF), // Light blue color
-                    fontWeight = FontWeight.Bold
+                    fontSize = 18.sp,
+                    color = Color(0xFF6949FF), // Purple text for month
+                    fontWeight = FontWeight.Medium
                 )
-                // Down arrow icon
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
                     contentDescription = "Dropdown Icon",
-                    tint = Color.Gray
+                    tint = Color(0xFF6949FF) // Purple dropdown icon
                 )
             }
         }
@@ -277,19 +312,18 @@ fun MonthDropdown() {
                         Text(
                             text = month,
                             fontSize = 16.sp,
-                            color = if (month == selectedMonth) Color.Blue else Color.Black // Highlight selected
+                            color = if (month == selectedMonth) Color(0xFF6949FF) else Color.Black
                         )
                     },
                     onClick = {
-                        selectedMonth = month // Update selected month
-                        expanded = false // Close dropdown
+                        selectedMonth = month
+                        expanded = false
                     }
                 )
             }
         }
     }
 }
-
 
 @Composable
 fun AccountBalance(balance: Int) {
@@ -307,7 +341,8 @@ fun AccountBalance(balance: Int) {
         Text(
             text = "$$balance",
             style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
         )
     }
 }
@@ -324,24 +359,45 @@ fun IncomeExpenseRow(income: Int, expenses: Int, navController: NavController) {
             modifier = Modifier
                 .weight(1f)
                 .padding(end = 8.dp)
-                .clickable { navController.navigate("income") }, // Navigate to IncomeScreen
+                .clickable { navController.navigate("income") },
             colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF4CAF50)
-            )
+                containerColor = Color(0xFF4CAF50) // Green card for income
+            ),
+            shape = RoundedCornerShape(12.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
+            Row(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Income",
-                    color = Color.White
-                )
-                Text(
-                    text = "$$income",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(Color.White.copy(alpha = 0.3f), RoundedCornerShape(20.dp)), // Using RoundedCornerShape instead of CircleShape
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowUpward,
+                        contentDescription = "Income",
+                        tint = Color.White
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .padding(start = 12.dp)
+                ) {
+                    Text(
+                        text = "Income",
+                        color = Color.White
+                    )
+                    Text(
+                        text = "$$income",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    )
+                }
             }
         }
 
@@ -349,24 +405,45 @@ fun IncomeExpenseRow(income: Int, expenses: Int, navController: NavController) {
             modifier = Modifier
                 .weight(1f)
                 .padding(start = 8.dp)
-                .clickable { navController.navigate("expense") }, // Navigate to ExpenseScreen
+                .clickable { navController.navigate("expense") },
             colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFFF5252)
-            )
+                containerColor = Color(0xFFFF5252) // Red card for expenses
+            ),
+            shape = RoundedCornerShape(12.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
+            Row(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Expenses",
-                    color = Color.White
-                )
-                Text(
-                    text = "$$expenses",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(Color.White.copy(alpha = 0.3f), RoundedCornerShape(20.dp)), // Using RoundedCornerShape instead of CircleShape
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingBag,
+                        contentDescription = "Expenses",
+                        tint = Color.White
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .padding(start = 12.dp)
+                ) {
+                    Text(
+                        text = "Expenses",
+                        color = Color.White
+                    )
+                    Text(
+                        text = "$$expenses",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
+                    )
+                }
             }
         }
     }
@@ -382,7 +459,8 @@ fun SpendFrequencySection() {
         Text(
             text = "Spend Frequency",
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 8.dp),
+            color = Color.Black
         )
 
         Box(
@@ -390,39 +468,81 @@ fun SpendFrequencySection() {
                 .fillMaxWidth()
                 .height(100.dp)
                 .background(
-                    color = Color(0xFFE0E0E0),
+                    color = Color.White,
                     shape = RoundedCornerShape(8.dp)
                 )
-        )
+                .padding(16.dp)
+        ) {
+            // Purple line chart for spend frequency
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val path = Path()
+                val width = size.width
+                val height = size.height
+
+                // Create a wave pattern similar to screenshot
+                path.moveTo(0f, height * 0.7f)
+                path.cubicTo(
+                    width * 0.2f, height * 0.9f,
+                    width * 0.4f, height * 0.3f,
+                    width * 0.6f, height * 0.5f
+                )
+                path.cubicTo(
+                    width * 0.8f, height * 0.7f,
+                    width * 0.9f, height * 0.1f,
+                    width, height * 0.4f
+                )
+
+                // Draw the path with purple color and stroke
+                drawPath(
+                    path = path,
+                    color = Color(0xFF6949FF),
+                    style = Stroke(width = 3.dp.toPx())
+                )
+            }
+        }
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            // Time filter chips with the first one selected
             FilterChip(
                 selected = true,
                 onClick = { /* TODO */ },
-                label = { Text("Today") }
+                label = { Text("Today") },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = Color(0xFFFFF4D9), // Light yellow background
+                    selectedLabelColor = Color.Black
+                )
             )
-            Spacer(modifier = Modifier.width(8.dp))
             FilterChip(
                 selected = false,
                 onClick = { /* TODO */ },
-                label = { Text("Week") }
+                label = { Text("Week") },
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = Color(0xFFF0F0F0),
+                    labelColor = Color.Gray
+                )
             )
-            Spacer(modifier = Modifier.width(8.dp))
             FilterChip(
                 selected = false,
                 onClick = { /* TODO */ },
-                label = { Text("Month") }
+                label = { Text("Month") },
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = Color(0xFFF0F0F0),
+                    labelColor = Color.Gray
+                )
             )
-            Spacer(modifier = Modifier.width(8.dp))
             FilterChip(
                 selected = false,
                 onClick = { /* TODO */ },
-                label = { Text("Year") }
+                label = { Text("Year") },
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = Color(0xFFF0F0F0),
+                    labelColor = Color.Gray
+                )
             )
         }
     }
@@ -442,35 +562,66 @@ fun RecentTransactionsSection() {
         ) {
             Text(
                 text = "Recent Transaction",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.Black
             )
-            TextButton(onClick = { /* TODO */ }) {
-                Text("See All")
+            TextButton(
+                onClick = { /* TODO */ },
+                colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF6949FF))
+            ) {
+                Text(
+                    "See All",
+                    modifier = Modifier
+                        .background(
+                            color = Color(0xFFEFE9FF),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    color = Color(0xFF6949FF)
+                )
             }
         }
 
+        // Shopping transaction
         TransactionItem(
+            iconBackgroundColor = Color(0xFFFFF4D9), // Light yellow
             icon = Icons.Default.ShoppingCart,
+            iconTint = Color(0xFFFF9800), // Orange
             title = "Shopping",
             subtitle = "Buy some grocery",
-            amount = -10,
+            amount = -120,
             time = "10:00 AM"
         )
 
+        // Subscription transaction
         TransactionItem(
-            icon = Icons.Default.Menu,
+            iconBackgroundColor = Color(0xFFE8E5FF), // Light purple
+            icon = Icons.Default.Subscriptions,
+            iconTint = Color(0xFF6949FF), // Purple
             title = "Subscription",
             subtitle = "Disney+ Annual",
-            amount = +10,
+            amount = -80,
             time = "03:30 PM"
         )
 
+        // Food transaction
+        TransactionItem(
+            iconBackgroundColor = Color(0xFFFFE8E8), // Light red
+            icon = Icons.Default.Restaurant,
+            iconTint = Color(0xFFFF5252), // Red
+            title = "Food",
+            subtitle = "Buy a ramen",
+            amount = -32,
+            time = "07:30 PM"
+        )
     }
 }
 
 @Composable
 fun TransactionItem(
+    iconBackgroundColor: Color,
     icon: ImageVector,
+    iconTint: Color,
     title: String,
     subtitle: String,
     amount: Int,
@@ -484,16 +635,18 @@ fun TransactionItem(
     ) {
         Box(
             modifier = Modifier
+                .size(48.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .padding(8.dp)
+                    color = iconBackgroundColor,
+                    shape = RoundedCornerShape(12.dp)
+                ),
+            contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = title,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = iconTint,
+                modifier = Modifier.size(24.dp)
             )
         }
 
@@ -504,7 +657,8 @@ fun TransactionItem(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.Black
             )
             Text(
                 text = subtitle,
@@ -517,9 +671,9 @@ fun TransactionItem(
             horizontalAlignment = Alignment.End
         ) {
             Text(
-                text = "$$amount",
+                text = if (amount < 0) "-$${-amount}" else "+$${amount}",
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (amount < 0) Color.Red else Color.Green
+                color = if (amount < 0) Color.Red else Color(0xFF4CAF50) // Red for negative, green for positive
             )
             Text(
                 text = time,
@@ -569,6 +723,7 @@ fun TransactionItem(
 //    }
 //}
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun FinanceTrackerPreview() {
