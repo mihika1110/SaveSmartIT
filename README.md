@@ -12,5 +12,4 @@ Real-Time Updates: Keep track of your financial habits with up-to-date insights.
 Tech Stack
 
 Frontend: Kotlin 
-Backend: Flask/Django
 Database: Firebase
