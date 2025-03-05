@@ -160,16 +160,16 @@ fun FinanceTrackerScreen() {
                     navController = navController,  // Use the same navController
                     onAccountClick = {},
                     onSettingsClick = { navController.navigate("settings") }, // Fix navigation here
-                    onExportDataClick = {},
+//                    onExportDataClick = {},
                     onLogoutClick = {}
                 )
             }
 
             composable("settings") { SettingsScreen(navController) } // Settings screen added correctly
 
-            composable("budget") { // Budget screen navigation
-                BudgetHomeScreen(navController)
-            }
+//            composable("budget") { // Budget screen navigation
+//                BudgetHomeScreen(navController)
+//            }
         }
     }
 }
