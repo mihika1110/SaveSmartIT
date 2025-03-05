@@ -39,15 +39,9 @@ fun DetailedBudgetScreen() {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(360.dp))
 
-        // Create Budget Button
-        Button(
-            onClick = { /* Handle button click */ },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Create a budget")
-        }
+        BottomNavigation()
     }
 }
 
