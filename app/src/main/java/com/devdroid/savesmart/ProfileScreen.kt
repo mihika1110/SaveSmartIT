@@ -1,4 +1,5 @@
 package com.devdroid.savesmart
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,12 +14,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun ProfileScreen(
+    navController: NavController,
     username: String = "Juhi Sahni",
     onAccountClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = { navController.navigate("settings") },
     onExportDataClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {}
 ) {
@@ -27,7 +32,6 @@ fun ProfileScreen(
             .fillMaxSize()
             .padding(30.dp)
     ) {
-        // Status Bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -43,7 +47,6 @@ fun ProfileScreen(
             Text(text = "9:41")
         }
 
-        // Profile Section
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -67,20 +70,6 @@ fun ProfileScreen(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-
-                    IconButton(
-                        onClick = { },
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .size(24.dp)
-                            .offset(x = (-4).dp, y = (-4).dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit Profile Picture",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -91,7 +80,6 @@ fun ProfileScreen(
             }
         }
 
-        // Menu Items
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -127,10 +115,7 @@ fun ProfileScreen(
             }
         }
 
-        // Removed the extra navigation bar that was here
         Spacer(modifier = Modifier.weight(1f))
-
-        // No NavigationBar here anymore
     }
 }
 
@@ -173,4 +158,11 @@ private fun ProfileMenuItem(
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewProfileScreen() {
+    val navController = rememberNavController()
+    ProfileScreen(navController)
 }
