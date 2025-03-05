@@ -41,7 +41,7 @@ fun DetailedBudgetScreen() {
 
         Spacer(modifier = Modifier.height(360.dp))
 
-        BottomNavigation()
+
     }
 }
 
