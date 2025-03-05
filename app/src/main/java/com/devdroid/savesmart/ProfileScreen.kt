@@ -100,12 +100,12 @@ fun ProfileScreen(
                     onClick = onSettingsClick,
                     iconTint = MaterialTheme.colorScheme.primary
                 )
-                ProfileMenuItem(
-                    icon = Icons.Default.Share,
-                    title = "Export Data",
-                    onClick = onExportDataClick,
-                    iconTint = MaterialTheme.colorScheme.primary
-                )
+//                ProfileMenuItem(
+//                    icon = Icons.Default.Share,
+//                    title = "Export Data",
+//                    onClick = onExportDataClick,
+//                    iconTint = MaterialTheme.colorScheme.primary
+//                )
                 ProfileMenuItem(
                     icon = Icons.Default.ExitToApp,
                     title = "Logout",

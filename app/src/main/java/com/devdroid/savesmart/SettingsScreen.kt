@@ -43,7 +43,7 @@ fun SettingsScreen(navController: NavController) {
                 "Currency" to "USD",
                 "Language" to "English",
                 "Theme" to "Dark",
-                "Security" to "Fingerprint",
+                "Security" to "Pin",
                 "About" to null,
                 "Help" to null
             ).forEach { (title, value) ->
