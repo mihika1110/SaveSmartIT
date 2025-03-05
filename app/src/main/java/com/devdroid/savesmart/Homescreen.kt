@@ -2,6 +2,7 @@ package com.devdroid.savesmart
 
 //package com.example.home
 
+import BudgetScreen
 import android.os.Build
 import android.os.Bundle
 import androidx.compose.material3.Icon
@@ -128,7 +129,7 @@ fun FinanceTrackerScreen() {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFFF8F8F0)) // Light cream background from screenshot
+                        .background(Color(0xFFF8F8F0)) // Light cream background
                         .padding(paddingValues)
                         .padding(16.dp)
                 ) {
@@ -143,27 +144,31 @@ fun FinanceTrackerScreen() {
             composable("income") {
                 IncomeScreen(
                     navController = navController,
-                    onAmountAdded = { amount ->
-                        totalIncome += amount
-                    }
+                    onAmountAdded = { amount -> totalIncome += amount }
                 )
             }
+
             composable("expense") {
                 ExpenseScreen(
                     navController = navController,
-                    onAmountAdded = { amount ->
-                        totalExpenses += amount
-                    }
+                    onAmountAdded = { amount -> totalExpenses += amount }
                 )
             }
 
             composable("profile") {
                 ProfileScreen(
+                    navController = navController,  // Use the same navController
                     onAccountClick = {},
-                    onSettingsClick = {},
+                    onSettingsClick = { navController.navigate("settings") }, // Fix navigation here
                     onExportDataClick = {},
                     onLogoutClick = {}
                 )
+            }
+
+            composable("settings") { SettingsScreen(navController) } // Settings screen added correctly
+
+            composable("budget") { // Budget screen navigation
+                BudgetHomeScreen(navController)
             }
         }
     }
