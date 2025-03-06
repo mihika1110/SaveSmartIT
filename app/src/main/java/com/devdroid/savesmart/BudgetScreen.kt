@@ -209,43 +209,43 @@ fun BudgetScreen(navController: NavController) {
         Spacer(modifier = Modifier.weight(1f))
 
         // Bottom Navigation
-        BottomNavigation()
+
     }
 }
 
 
-@Composable
-fun BottomNavigation() {
-    NavigationBar(
-        modifier = Modifier.fillMaxWidth(),
-        containerColor = Color(0xFFFFFFFF)
-    ) {
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-            label = { Text("Home") },
-            selected = true,
-            onClick = { /* TODO */ }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.List, contentDescription = "Transaction") },
-            label = { Text("Transaction") },
-            selected = false,
-            onClick = { /* TODO */ }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Add, contentDescription = "Add") },
-            label = { Text("Add") },
-            selected = false,
-            onClick = { /* TODO */ }
-        )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-            label = { Text("Profile") },
-            selected = false,
-            onClick = { /* TODO */ }
-        )
-    }
-}
+//@Composable
+//fun BottomNavigation() {
+//    NavigationBar(
+//        modifier = Modifier.fillMaxWidth(),
+//        containerColor = Color(0xFFFFFFFF)
+//    ) {
+//        NavigationBarItem(
+//            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+//            label = { Text("Home") },
+//            selected = true,
+//            onClick = { /* TODO */ }
+//        )
+//        NavigationBarItem(
+//            icon = { Icon(Icons.Default.List, contentDescription = "Transaction") },
+//            label = { Text("Transaction") },
+//            selected = false,
+//            onClick = { /* TODO */ }
+//        )
+//        NavigationBarItem(
+//            icon = { Icon(Icons.Default.Add, contentDescription = "Add") },
+//            label = { Text("Add") },
+//            selected = false,
+//            onClick = { /* TODO */ }
+//        )
+//        NavigationBarItem(
+//            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+//            label = { Text("Profile") },
+//            selected = false,
+//            onClick = { /* TODO */ }
+//        )
+//    }
+//}
 
 @Preview(showBackground = true)
 @Composable

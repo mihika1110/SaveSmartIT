@@ -160,7 +160,7 @@ fun FinanceTrackerScreen() {
                     navController = navController,  // Use the same navController
                     onAccountClick = {},
                     onSettingsClick = { navController.navigate("settings") }, // Fix navigation here
-//                    onExportDataClick = {},
+                    onExportDataClick = {},
                     onLogoutClick = {}
                 )
             }
