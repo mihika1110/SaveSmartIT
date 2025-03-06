@@ -165,7 +165,9 @@ fun FinanceTrackerScreen() {
                 )
             }
 
-            composable("settings") { SettingsScreen(navController) } // Settings screen added correctly
+            composable("settings") { SettingsScreen(navController) }
+            composable("about") { AboutScreen(navController) }
+            composable("help") { HelpScreen(navController) }// Settings screen added correctly
 
             composable("budget") { // Budget screen navigation
                 BudgetScreen(navController)
