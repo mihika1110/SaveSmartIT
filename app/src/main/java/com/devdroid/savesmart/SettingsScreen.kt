@@ -76,10 +76,3 @@ fun SettingsItem(title: String, value: String?, onClick: () -> Unit) {
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewSettingsScreen() {
-    val navController = rememberNavController()
-    SettingsScreen(navController)
-}

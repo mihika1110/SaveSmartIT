@@ -1,8 +1,14 @@
 plugins {
+    id("com.google.gms.google-services")
+//    id("com.android.application")
+//    id("com.google.gms.google-services") // ✅ Apply Firebase plugin correctly
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+//    alias(libs.plugins.google.gms.google.services)
+//    alias(com.google.gms.google-services)
 }
+
 
 android {
     namespace = "com.devdroid.savesmart"
@@ -90,6 +96,8 @@ dependencies {
     implementation("androidx.compose.material:material:1.5.1")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.1")
     implementation("androidx.activity:activity-compose:1.8.0")
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore.ktx)
 
     // Testing
     testImplementation(libs.junit)
@@ -101,6 +109,17 @@ dependencies {
     // Debug Dependencies
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+//    implementation 'com.google.firebase:firebase-auth-ktx'
+//    implementation 'com.google.firebase:firebase-firestore-ktx'
+
 
     implementation ("androidx.navigation:navigation-compose:2.5.3")
+
+//    Apply the Google Services Gradle plugin:
+
+
+//    Add the library dependency:
+    implementation ("com.google.firebase:firebase-auth:23.2.0")
+    implementation ("com.google.firebase:firebase-firestore:25.1.3")
+
 }
