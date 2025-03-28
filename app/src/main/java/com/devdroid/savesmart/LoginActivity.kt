@@ -1,5 +1,7 @@
 package com.devdroid.savesmart
 
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -28,6 +30,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -172,14 +175,47 @@ fun LoginScreen() {
                             .addOnCompleteListener { task ->
                                 isLoading = false
                                 if (task.isSuccessful) {
-                                    // Successful login -> Navigate to Home/MainActivity
                                     Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
-                                    val intent = Intent(context, LetsSetupPage::class.java)
-                                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                                    context.startActivity(intent)
-                                    (context as? ComponentActivity)?.finish()
+
+                                    val userId = FirebaseAuth.getInstance().currentUser?.uid
+                                    val firestore = FirebaseFirestore.getInstance()
+                                    val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+                                    val savedCurrency = sharedPreferences.getString("SELECTED_CURRENCY", null)
+
+                                    if (savedCurrency == null) {
+                                        // Fetch currency from Firestore if not found in SharedPreferences
+                                        if (userId != null) {
+                                            val userRef = firestore.collection("users").document(userId)
+                                            userRef.get()
+                                                .addOnSuccessListener { document ->
+                                                    val currency = document.getString("currency")
+
+                                                    if (currency != null) {
+                                                        // Save to SharedPreferences and navigate to Home
+                                                        sharedPreferences.edit().putString("SELECTED_CURRENCY", currency).apply()
+                                                        val intent = Intent(context, Homescreen::class.java)
+                                                        context.startActivity(intent)
+                                                    } else {
+                                                        // Redirect to Currency Selection page
+                                                        val intent = Intent(context, LetsSetupPage::class.java)
+                                                        context.startActivity(intent)
+                                                    }
+                                                }
+                                                .addOnFailureListener {
+                                                    Toast.makeText(context, "Error fetching currency!", Toast.LENGTH_SHORT).show()
+                                                }
+                                        } else {
+                                            // If userId is null, go to CurrencyActivity
+                                            val intent = Intent(context, LetsSetupPage::class.java)
+                                            context.startActivity(intent)
+                                        }
+                                    } else {
+                                        // If currency is already stored, go to HomeScreen
+                                        val intent = Intent(context, Homescreen::class.java)
+                                        context.startActivity(intent)
+                                    }
                                 } else {
-                                    // Handle errors
+                                    // Handle login errors
                                     val errorMessage = task.exception?.message ?: "Login Failed"
                                     if (errorMessage.contains("no user record", true)) {
                                         Toast.makeText(context, "Please sign up before logging in!", Toast.LENGTH_SHORT).show()
@@ -201,7 +237,8 @@ fun LoginScreen() {
                     containerColor = Color(0xFF6C63FF)
                 ),
                 shape = RoundedCornerShape(8.dp)
-            ) {
+            )
+            {
                 if (isLoading) {
                     CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
                 } else {
