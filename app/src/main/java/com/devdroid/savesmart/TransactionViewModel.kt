@@ -46,9 +46,7 @@ class TransactionViewModel : ViewModel() {
             .add(incomeData)
             .addOnSuccessListener {
                 // Refresh all data
-                fetchTotalIncome()
-                fetchTotalExpenses()
-                fetchTransactions()
+                fetchAllTransactions()
                 onComplete(true)
             }
             .addOnFailureListener { e ->
@@ -80,9 +78,7 @@ class TransactionViewModel : ViewModel() {
             .add(expenseData)
             .addOnSuccessListener {
                 // Refresh all data
-                fetchTotalIncome()
-                fetchTotalExpenses()
-                fetchTransactions()
+                fetchAllTransactions()
                 onComplete(true)
             }
             .addOnFailureListener { e ->
@@ -91,49 +87,8 @@ class TransactionViewModel : ViewModel() {
             }
     }
 
-    fun fetchTotalIncome() {
-        val user = auth.currentUser
-        if (user == null) {
-            Log.e("Firestore", "User not logged in")
-            return
-        }
-
-        db.collection("transactions")
-            .whereEqualTo("uid", user.uid)
-            .whereGreaterThan("amount", 0)
-            .get()
-            .addOnSuccessListener { result ->
-                val sum = result.documents.sumOf { it.getLong("amount")?.toInt() ?: 0 }
-                Log.d("SaveSmart", "Total income: $sum")
-                _totalIncome.value = sum
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Error fetching income", e)
-            }
-    }
-
-    fun fetchTotalExpenses() {
-        val user = auth.currentUser
-        if (user == null) {
-            Log.e("Firestore", "User not logged in")
-            return
-        }
-
-        db.collection("transactions")
-            .whereEqualTo("uid", user.uid)
-            .whereLessThan("amount", 0)
-            .get()
-            .addOnSuccessListener { result ->
-                val sum = result.documents.sumOf { it.getLong("amount")?.toInt() ?: 0 }
-                Log.d("SaveSmart", "Total expenses: $sum")
-                _totalExpenses.value = sum
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Error fetching expenses", e)
-            }
-    }
-
-    fun fetchTransactions() {
+    // This single method fetches all transactions and calculates income and expenses
+    fun fetchAllTransactions() {
         val user = auth.currentUser
         if (user == null) {
             Log.e("Firestore", "User not logged in")
@@ -144,16 +99,26 @@ class TransactionViewModel : ViewModel() {
             .whereEqualTo("uid", user.uid)
             .get()
             .addOnSuccessListener { result ->
+                var incomeSum = 0
+                var expenseSum = 0
                 val transactionList = result.documents.mapNotNull { doc ->
                     val id = doc.id
                     val amount = doc.getLong("amount")?.toInt()
                     val category = doc.getString("category")
-                    val type = if (amount != null && amount < 0) "Expense" else "Income"
                     val timestampLong = doc.getLong("timestamp")
                     val note = doc.getString("note") ?: ""
 
                     if (amount != null && category != null && timestampLong != null) {
+                        // Calculate income and expense totals
+                        if (amount > 0) {
+                            incomeSum += amount
+                        } else {
+                            expenseSum += amount // This will add a negative number
+                        }
+                        
+                        val type = if (amount < 0) "Expense" else "Income"
                         val timestamp = Timestamp(Date(timestampLong))
+                        
                         Transaction(
                             id = id,
                             amount = amount,
@@ -164,10 +129,29 @@ class TransactionViewModel : ViewModel() {
                         )
                     } else null
                 }
+                
+                // Update all state flows
                 _transactions.value = transactionList
+                _totalIncome.value = incomeSum
+                _totalExpenses.value = expenseSum
+                
+                Log.d("SaveSmart", "Fetched transactions: ${transactionList.size}, Income: $incomeSum, Expenses: $expenseSum")
             }
             .addOnFailureListener { e ->
                 Log.e("Firestore", "Error fetching transactions", e)
             }
+    }
+
+    // The following methods are kept for compatibility but now just call fetchAllTransactions
+    fun fetchTransactions() {
+        fetchAllTransactions()
+    }
+    
+    fun fetchTotalIncome() {
+        fetchAllTransactions()
+    }
+    
+    fun fetchTotalExpenses() {
+        fetchAllTransactions()
     }
 }
