@@ -3,6 +3,7 @@ package com.devdroid.savesmart
 //package com.example.home
 
 import BudgetScreen
+import DetailedBudgetScreen
 import android.os.Build
 import android.os.Bundle
 import androidx.compose.material3.Icon
@@ -173,6 +174,9 @@ fun FinanceTrackerScreen(viewModel: TransactionViewModel = viewModel()) {
 
             composable("budget") { // Budget screen navigation
                 BudgetScreen(navController)
+            }
+            composable("detailedBudgetScreen") {
+                DetailedBudgetScreen()
             }
         }
     }
