@@ -166,7 +166,7 @@ fun IncomeScreen(
                             date = firebaseTimestamp // ✅ Pass Timestamp instead of String
                         )
 
-                        viewModel.addIncome(transaction.amount, transaction.category) { success ->
+                        viewModel.addIncome(transaction.amount, transaction.category, transaction.note) { success ->
                             if (success) {
                                 Toast.makeText(context, "Income added!", Toast.LENGTH_SHORT).show()
                                 navController?.navigateUp()

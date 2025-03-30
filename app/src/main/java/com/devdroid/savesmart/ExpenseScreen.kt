@@ -216,10 +216,7 @@ fun ExpenseScreen(
                                     date = firebaseTimestamp
                                 )
 
-                                viewModel.addExpense(
-                                    transaction.amount,
-                                    transaction.category
-                                ) { success ->
+                                viewModel.addExpense(amount.toInt(), category, description) { success ->
                                     if (success) {
                                         Toast.makeText(context, "Expense added!", Toast.LENGTH_SHORT).show()
                                         navController?.navigateUp()

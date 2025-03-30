@@ -1,7 +1,5 @@
 package com.devdroid.savesmart
 
-//package com.example.home
-
 import BudgetScreen
 import DetailedBudgetScreen
 import android.os.Build
@@ -37,19 +35,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.devdroid.savesmart.IncomeScreen
 import com.devdroid.savesmart.ExpenseScreen
-//import com.example.expensescreen.ExpenseScreen
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.Canvas
 import androidx.navigation.compose.currentBackStackEntryAsState
-//import com.devdroid.savesmart.ui.ExpenseGraph
 import com.devdroid.savesmart.viewmodel.TransactionViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.devdroid.savesmart.ui.TransactionItem
 import com.devdroid.savesmart.ui.TransactionScreen
-
-
-//import com.example.home.ui.theme.HOMETheme
 
 class Homescreen : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -64,73 +57,23 @@ class Homescreen : ComponentActivity() {
     }
 }
 
-//@RequiresApi(Build.VERSION_CODES.O)
-//@Composable
-//fun FinanceTrackerScreen() {
-//    val navController = rememberNavController()
-//    var totalIncome by remember { mutableStateOf(0) }
-//    var totalExpenses by remember { mutableStateOf(0) }
-//    Scaffold(
-//        bottomBar = { BottomNavigation() }
-//    ) { paddingValues ->
-//        NavHost(
-//            navController = navController,
-//            startDestination = "home"
-//        ) {
-//            composable("home") {
-//                Column(
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .background(Color.Black)
-//                        .padding(paddingValues)
-//                        .padding(16.dp)
-//                ) {
-//                    TopBar()
-//                    AccountBalance(balance = totalIncome - totalExpenses)
-//                    IncomeExpenseRow(income = totalIncome, expenses = totalExpenses, navController)
-//                    SpendFrequencySection()
-//                    RecentTransactionsSection()
-//                }
-//            }
-//
-//            composable("income") {
-//                // Pass the income updater function
-//                IncomeScreen(
-//                    navController = navController,
-//                    onAmountAdded = { amount ->
-//                        totalIncome += amount
-//                    }
-//                )
-//            }
-//            composable("expense") {
-//                ExpenseScreen(
-//                    navController = navController,
-//                    onAmountAdded = { amount ->
-//                        totalExpenses += amount
-//                    }
-//                )
-//            }
-//        }
-//    }
-//}
-
-
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun FinanceTrackerScreen(viewModel: TransactionViewModel = viewModel()) {
     val navController = rememberNavController()
-//    var totalIncome by remember { mutableStateOf(0) }
-//    var totalExpenses by remember { mutableStateOf(0) }
     val navBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry.value?.destination?.route ?: "home" // Default to home if null
+    
+    // Collect income and expense values from the view model
     val totalIncome by viewModel.totalIncome.collectAsState()
-    val totalExpenses by viewModel.totalExpenses.collectAsState(0)
+    val totalExpenses by viewModel.totalExpenses.collectAsState()
 
-    LaunchedEffect(true) {
+    // Fetch data when screen first loads and when navigation changes
+    LaunchedEffect(Unit) {
         viewModel.fetchTotalIncome()
         viewModel.fetchTotalExpenses()
+        viewModel.fetchTransactions()
     }
-
 
     Scaffold(
         bottomBar = { BottomNavigation(navController = navController, currentRoute = currentRoute) }
@@ -148,38 +91,35 @@ fun FinanceTrackerScreen(viewModel: TransactionViewModel = viewModel()) {
                         .padding(16.dp)
                 ) {
                     TopBar()
-                    AccountBalance(balance = totalIncome - totalExpenses)
+                    
+                    // Display the account balance (income + expenses)
+                    AccountBalance(balance = totalIncome + totalExpenses) 
+                    
+                    // Pass income and expense values to the row
                     IncomeExpenseRow(income = totalIncome, expenses = totalExpenses, navController)
                     SpendFrequencySection()
-                    RecentTransactionsSection(viewModel)
-//                    ExpenseGraph()
+                    RecentTransactionsSection(viewModel, navController)
                 }
             }
 
+            // Keep the rest of the composables as is
             composable("income") { IncomeScreen(navController, viewModel) }
             composable("expense") { ExpenseScreen(navController, viewModel) }
             composable("transactions") { TransactionScreen(navController, viewModel) }
-
             composable("profile") {
                 ProfileScreen(
-                    navController = navController,  // Use the same navController
+                    navController = navController,
                     onAccountClick = {},
-                    onSettingsClick = { navController.navigate("settings") }, // Fix navigation here
+                    onSettingsClick = { navController.navigate("settings") },
                     onExportDataClick = {},
                     onLogoutClick = {}
                 )
             }
-
             composable("settings") { SettingsScreen(navController) }
             composable("about") { AboutScreen(navController) }
-            composable("help") { HelpScreen(navController) }// Settings screen added correctly
-
-            composable("budget") { // Budget screen navigation
-                BudgetScreen(navController)
-            }
-            composable("detailedBudgetScreen") {
-                DetailedBudgetScreen()
-            }
+            composable("help") { HelpScreen(navController) }
+            composable("budget") { BudgetScreen(navController) }
+            composable("detailedBudgetScreen") { DetailedBudgetScreen() }
         }
     }
 }
@@ -228,7 +168,6 @@ fun BottomNavigation(navController: NavController, currentRoute: String) {
         )
     }
 }
-
 
 @Composable
 fun TopBar() {
@@ -342,6 +281,10 @@ fun MonthDropdown() {
 
 @Composable
 fun AccountBalance(balance: Int) {
+    val isNegative = balance < 0
+    val displayBalance = if (isNegative) "-$${Math.abs(balance)}" else "$${balance}"
+    val balanceColor = if (isNegative) Color(0xFFFF5252) else Color(0xFF4CAF50) // Red for negative, green for positive
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -354,10 +297,10 @@ fun AccountBalance(balance: Int) {
             color = Color.Gray
         )
         Text(
-            text = "$$balance",
+            text = displayBalance,
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = balanceColor
         )
     }
 }
@@ -389,7 +332,7 @@ fun IncomeExpenseRow(income: Int, expenses: Int, navController: NavController) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .background(Color.White.copy(alpha = 0.3f), RoundedCornerShape(20.dp)), // Using RoundedCornerShape instead of CircleShape
+                        .background(Color.White.copy(alpha = 0.3f), RoundedCornerShape(20.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -435,7 +378,7 @@ fun IncomeExpenseRow(income: Int, expenses: Int, navController: NavController) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .background(Color.White.copy(alpha = 0.3f), RoundedCornerShape(20.dp)), // Using RoundedCornerShape instead of CircleShape
+                        .background(Color.White.copy(alpha = 0.3f), RoundedCornerShape(20.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -453,7 +396,8 @@ fun IncomeExpenseRow(income: Int, expenses: Int, navController: NavController) {
                         color = Color.White
                     )
                     Text(
-                        text = "$$expenses",
+                        // Show the absolute value of expenses for display purposes
+                        text = "$${Math.abs(expenses)}",
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp
@@ -564,9 +508,10 @@ fun SpendFrequencySection() {
 }
 
 @Composable
-fun RecentTransactionsSection(viewModel: TransactionViewModel) {
+fun RecentTransactionsSection(viewModel: TransactionViewModel, navController: NavController) {
     val transactions by viewModel.transactions.collectAsState(initial = emptyList())
 
+    // Show up to 3 recent transactions
     val recentTransactions = transactions.sortedByDescending { it.timestamp.seconds }.take(1)
 
     Column(
@@ -585,7 +530,7 @@ fun RecentTransactionsSection(viewModel: TransactionViewModel) {
                 color = Color.Black
             )
             TextButton(
-                onClick = { /* TODO: Navigate to full transaction screen */ },
+                onClick = { navController.navigate("transactions") },
                 colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF6949FF))
             ) {
                 Text(
@@ -615,47 +560,6 @@ fun RecentTransactionsSection(viewModel: TransactionViewModel) {
         }
     }
 }
-
-
-
-//@Composable
-//fun BottomNavigation() {
-//    NavigationBar(
-//        modifier = Modifier.fillMaxWidth(),
-//        containerColor = Color(0xFFFFFFFF)
-//    ) {
-//        NavigationBarItem(
-//            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-//            label = { Text("Home") },
-//            selected = true,
-//            onClick = { /* TODO */ }
-//        )
-//        NavigationBarItem(
-//            icon = { Icon(Icons.Default.List, contentDescription = "Transaction") },
-//            label = { Text("Transaction") },
-//            selected = false,
-//            onClick = { /* TODO */ }
-//        )
-//        NavigationBarItem(
-//            icon = { Icon(Icons.Default.Add, contentDescription = "Add") },
-//            label = { Text("Add") },
-//            selected = false,
-//            onClick = { /* TODO */ }
-//        )
-////        NavigationBarItem(
-////            icon = { Icon(Icons.Default.PieChart, contentDescription = "Budget") },
-////            label = { Text("Budget") },
-////            selected = false,
-////            onClick = { /* TODO */ }
-////        )
-//        NavigationBarItem(
-//            icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-//            label = { Text("Profile") },
-//            selected = false,
-//            onClick = { NavController.navigate("profile") }
-//        )
-//    }
-//}
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)

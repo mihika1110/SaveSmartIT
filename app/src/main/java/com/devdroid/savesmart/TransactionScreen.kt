@@ -1,6 +1,7 @@
 package com.devdroid.savesmart.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -45,33 +46,30 @@ fun TransactionScreen(navController: NavController, transactionViewModel: Transa
         val transactionsByDate = filteredTransactions
             .sortedByDescending { it.timestamp.seconds }
             .groupBy { transaction ->
-                val calendar = Calendar.getInstance()
-                val transactionTimestamp = Date(transaction.timestamp.seconds * 1000)
+                val transactionDate = Date(transaction.timestamp.seconds * 1000)
                 
-                // Set to start of day for comparison
-                calendar.time = Date()
-                calendar.set(Calendar.HOUR_OF_DAY, 0)
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.set(Calendar.SECOND, 0)
-                calendar.set(Calendar.MILLISECOND, 0)
-                val startOfToday = calendar.time
+                // Create calendar instances with the default timezone
+                val today = Calendar.getInstance()
+                val yesterday = Calendar.getInstance()
+                yesterday.add(Calendar.DAY_OF_YEAR, -1)
                 
-                // Check for yesterday
-                calendar.add(Calendar.DATE, -1)
-                val startOfYesterday = calendar.time
-
-                // Check which group this transaction belongs to
-                val transactionCalendar = Calendar.getInstance()
-                transactionCalendar.time = transactionTimestamp
-                transactionCalendar.set(Calendar.HOUR_OF_DAY, 0)
-                transactionCalendar.set(Calendar.MINUTE, 0)
-                transactionCalendar.set(Calendar.SECOND, 0)
-                transactionCalendar.set(Calendar.MILLISECOND, 0)
+                // Reset time part to start of day for comparison
+                clearTimeFields(today)
+                clearTimeFields(yesterday)
                 
+                // Create a calendar for transaction date
+                val transactionCal = Calendar.getInstance()
+                transactionCal.time = transactionDate
+                clearTimeFields(transactionCal)
+                
+                // Compare dates
                 when {
-                    transactionCalendar.time == startOfToday -> "Today"
-                    transactionCalendar.time == startOfYesterday -> "Yesterday"
-                    else -> SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(transactionTimestamp)
+                    // Same day as today
+                    isSameDay(transactionCal, today) -> "Today"
+                    // Same day as yesterday
+                    isSameDay(transactionCal, yesterday) -> "Yesterday"
+                    // Any other day
+                    else -> SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(transactionDate)
                 }
             }
             
@@ -91,20 +89,26 @@ fun TransactionScreen(navController: NavController, transactionViewModel: Transa
         // Then add all other dates in descending order
         transactionsByDate
             .filter { it.key != "Today" && it.key != "Yesterday" }
-            .toSortedMap(compareByDescending<String> { 
+            .toList()
+            .sortedByDescending { (dateStr, _) ->
                 // Parse the date string back to Date for comparison
-                SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).parse(it)?.time ?: 0
-            })
+                SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).parse(dateStr)?.time ?: 0
+            }
             .forEach { (date, transactions) ->
                 groupedTransactions[date] = transactions
             }
 
-        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Column(modifier = Modifier.fillMaxSize().padding(
+            start = 16.dp,
+            end = 16.dp,
+            bottom = 16.dp,
+            top = 24.dp // Increased top padding
+        )) {
 
             // Month Dropdown
             MonthDropdown(selectedMonth) { newMonth -> selectedMonth = newMonth }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp)) // Increased spacing
 
             // Financial Report Box
             FinancialReportBox()
@@ -119,7 +123,9 @@ fun TransactionScreen(navController: NavController, transactionViewModel: Transa
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn {
+            LazyColumn(
+                modifier = Modifier.padding(bottom = 80.dp) // Add bottom padding to avoid navigation bar overlap
+            ) {
                 groupedTransactions.forEach { (date, transactions) ->
                     item {
                         Text(
@@ -146,16 +152,71 @@ fun MonthDropdown(selectedMonth: String, onMonthSelected: (String) -> Unit) {
     val months = getLastSixMonths()
     var expanded by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
-        Button(onClick = { expanded = true }) {
-            Text(text = selectedMonth)
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            months.forEach { month ->
-                DropdownMenuItem(text = { Text(month) }, onClick = {
-                    onMonthSelected(month)
-                    expanded = false
-                })
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Month",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.Gray,
+            modifier = Modifier.padding(end = 16.dp)
+        )
+        
+        Box {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(1.dp),
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.padding(vertical = 4.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .clickable { expanded = true },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = selectedMonth,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    
+                    Icon(
+                        painter = painterResource(id = if (expanded) R.drawable.ic_arrow_right else R.drawable.ic_arrow_right),
+                        contentDescription = "Dropdown Arrow",
+                        modifier = Modifier
+                            .size(20.dp)
+                            .padding(start = 4.dp)
+                    )
+                }
+            }
+            
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.background(Color.White)
+            ) {
+                months.forEach { month ->
+                    DropdownMenuItem(
+                        text = { 
+                            Text(
+                                text = month,
+                                fontSize = 16.sp,
+                                fontWeight = if (month == selectedMonth) FontWeight.Bold else FontWeight.Normal,
+                                color = if (month == selectedMonth) Color(0xFF6200EE) else Color.Black
+                            ) 
+                        },
+                        onClick = {
+                            onMonthSelected(month)
+                            expanded = false
+                        }
+                    )
+                }
             }
         }
     }
@@ -168,20 +229,30 @@ fun FinancialReportBox() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)), // Light Blue
-        elevation = CardDefaults.cardElevation(6.dp)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF0E6FF)), // Light purple background to match image
+        elevation = CardDefaults.cardElevation(2.dp),
+        shape = MaterialTheme.shapes.medium
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
+                .padding(16.dp)
         ) {
             Text(
-                text = "See Your Financial Report",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
+                text = "See your financial report",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF6200EE), // Purple text
+                modifier = Modifier.align(Alignment.CenterStart)
+            )
+            
+            Icon(
+                painter = painterResource(id = R.drawable.ic_arrow_right),
+                contentDescription = "View Report",
+                tint = Color(0xFF6200EE), // Purple icon
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(24.dp)
             )
         }
     }
@@ -202,11 +273,11 @@ fun getLastSixMonths(): List<String> {
     }
 }
 
-// Updated TransactionItem to display stored time and description
+// Updated TransactionItem to display stored time and description with new design
 @Composable
 fun TransactionItem(transaction: Transaction) {
     val isIncome = transaction.amount > 0
-    val backgroundColor = if (isIncome) Color(0xFFE9FCE9) else Color(0xFFFFE9E9)
+    val amountText = if (isIncome) "+ $${transaction.amount}" else "- $${Math.abs(transaction.amount)}"
     val textColor = if (isIncome) Color(0xFF2E7D32) else Color(0xFFD32F2F)
 
     val icon = when (transaction.category.lowercase()) {
@@ -218,33 +289,53 @@ fun TransactionItem(transaction: Transaction) {
         else -> R.drawable.ic_default
     }
 
+    val backgroundColor = when (transaction.category.lowercase()) {
+        "shopping" -> Color(0xFFFEF3E0) // Light orange
+        "subscription" -> Color(0xFFE8EAF6) // Light purple
+        "food" -> Color(0xFFFFEBEE) // Light red
+        "salary" -> Color(0xFFE0F2F1) // Light green
+        "transportation" -> Color(0xFFE1F5FE) // Light blue
+        else -> Color(0xFFF5F5F5) // Light grey
+    }
+
     val storedTimeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
     val storedTime = storedTimeFormat.format(Date(transaction.timestamp.seconds * 1000))
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .background(backgroundColor),
-        elevation = CardDefaults.cardElevation(4.dp)
+            .padding(vertical = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                painter = painterResource(id = icon),
-                contentDescription = transaction.category,
-                tint = Color.Unspecified,
-                modifier = Modifier.size(40.dp)
-            )
+            // Category icon with colored background
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        color = backgroundColor,
+                        shape = MaterialTheme.shapes.medium
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = icon),
+                    contentDescription = transaction.category,
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = transaction.category,
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
@@ -257,17 +348,31 @@ fun TransactionItem(transaction: Transaction) {
 
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = if (isIncome) "+ $${transaction.amount}" else " $${transaction.amount}",
-                    fontSize = 18.sp,
+                    text = amountText,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = textColor
                 )
                 Text(
                     text = storedTime,
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     color = Color.Gray
                 )
             }
         }
     }
+}
+
+// Helper function to clear time fields from a calendar
+fun clearTimeFields(calendar: Calendar) {
+    calendar.set(Calendar.HOUR_OF_DAY, 0)
+    calendar.set(Calendar.MINUTE, 0)
+    calendar.set(Calendar.SECOND, 0)
+    calendar.set(Calendar.MILLISECOND, 0)
+}
+
+// Helper function to check if two calendar dates are the same day
+fun isSameDay(cal1: Calendar, cal2: Calendar): Boolean {
+    return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+           cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
 }
