@@ -1,10 +1,14 @@
 plugins {
+    id("com.google.gms.google-services")
+//    id("com.android.application")
+//    id("com.google.gms.google-services") // ✅ Apply Firebase plugin correctly
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.google.gms.google.services)
-
+//    alias(libs.plugins.google.gms.google.services)
+//    alias(com.google.gms.google-services)
 }
+
 
 android {
     namespace = "com.devdroid.savesmart"
@@ -59,11 +63,19 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
 
-    // Compose BOM (Manages all Compose versions)
+    // Compose BOM
     implementation(platform(libs.androidx.compose.bom))
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.material:material")
-    implementation("androidx.compose.ui:ui-tooling-preview")
+
+    // Compose UI Components
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+
+    // Additional Compose Dependencies
+    implementation("androidx.compose.ui:ui-text")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material:material-icons-extended")
 
     // Navigation Component for Compose
     implementation("androidx.navigation:navigation-compose:2.7.7")
@@ -72,15 +84,20 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
 
+    // Additional Support Libraries
+    implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+
     // Kotlin Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    // Firebase BOM (Manages all Firebase versions)
-    implementation(platform("com.google.firebase:firebase-bom:32.2.0"))
-    implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("androidx.compose.ui:ui:1.5.1")
+    implementation("androidx.compose.material:material:1.5.1")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.5.1")
+    implementation("androidx.activity:activity-compose:1.8.0")
+    implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore.ktx)
-
 
     // Testing
     testImplementation(libs.junit)
@@ -92,23 +109,17 @@ dependencies {
     // Debug Dependencies
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
-    // For graphs in Compose
-//    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
-    implementation ("com.github.PhilJay:MPAndroidChart:3.1.0")
-    implementation("com.patrykandpatrick.vico:compose:1.6.3") // For Compose charts
+//    implementation 'com.google.firebase:firebase-auth-ktx'
+//    implementation 'com.google.firebase:firebase-firestore-ktx'
 
 
-        implementation ("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation ("androidx.navigation:navigation-compose:2.5.3")
 
-    implementation ("androidx.compose.material3:material3:1.2.0")
-    implementation ("androidx.compose.material:material-icons-extended:1.6.7")
+//    Apply the Google Services Gradle plugin:
 
+
+//    Add the library dependency:
+    implementation ("com.google.firebase:firebase-auth:23.2.0")
+    implementation ("com.google.firebase:firebase-firestore:25.1.3")
 
 }
-
-//plugins {
-//    id("com.android.application")
-//    id("kotlin-android")
-//    id("com.google.gms.google-services")
-//}

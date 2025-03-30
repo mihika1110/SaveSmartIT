@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.tooling.preview.Preview
+import com.google.firebase.auth.FirebaseAuth
 
 
 
@@ -38,11 +39,16 @@ fun ProfileScreen(
 
     val onLogoutClick = remember {
         {
+            // Sign out from Firebase
+            FirebaseAuth.getInstance().signOut()
+
+            // Navigate to LoginActivity and clear back stack
             val intent = Intent(context, LoginActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
             context.startActivity(intent)
 
+            // Finish the current activity (only if context is an Activity)
             if (context is Activity) {
                 context.finish()
             }
@@ -177,11 +183,4 @@ private fun ProfileMenuItem(
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewProfileScreen() {
-    val navController = rememberNavController()
-    ProfileScreen(navController)
 }
