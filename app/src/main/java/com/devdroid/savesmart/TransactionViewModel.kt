@@ -26,7 +26,7 @@ class TransactionViewModel : ViewModel() {
     private val _totalExpenses = MutableStateFlow(0)
     val totalExpenses: StateFlow<Int> = _totalExpenses
 
-    fun addIncome(amount: Int, category: String, onComplete: (Boolean) -> Unit) {
+    fun addIncome(amount: Int, category: String, note: String = "", onComplete: (Boolean) -> Unit) {
         val user = auth.currentUser
         if (user == null) {
             Log.e("Firestore", "User not logged in")
@@ -38,13 +38,17 @@ class TransactionViewModel : ViewModel() {
             "uid" to user.uid,
             "amount" to amount,
             "category" to category,
+            "note" to note,
             "timestamp" to System.currentTimeMillis()
         )
 
         db.collection("transactions")
             .add(incomeData)
             .addOnSuccessListener {
+                // Refresh all data
                 fetchTotalIncome()
+                fetchTotalExpenses()
+                fetchTransactions()
                 onComplete(true)
             }
             .addOnFailureListener { e ->
@@ -53,7 +57,7 @@ class TransactionViewModel : ViewModel() {
             }
     }
 
-    fun addExpense(amount: Int, category: String, onComplete: (Boolean) -> Unit) {
+    fun addExpense(amount: Int, category: String, note: String = "", onComplete: (Boolean) -> Unit) {
         val user = auth.currentUser
         if (user == null) {
             Log.e("Firestore", "User not logged in")
@@ -61,17 +65,24 @@ class TransactionViewModel : ViewModel() {
             return
         }
 
+        // Ensure expense amount is negative
+        val negativeAmount = if (amount > 0) -amount else amount
+
         val expenseData = hashMapOf(
             "uid" to user.uid,
-            "amount" to amount,
+            "amount" to negativeAmount,
             "category" to category,
+            "note" to note,
             "timestamp" to System.currentTimeMillis()
         )
 
         db.collection("transactions")
             .add(expenseData)
             .addOnSuccessListener {
+                // Refresh all data
+                fetchTotalIncome()
                 fetchTotalExpenses()
+                fetchTransactions()
                 onComplete(true)
             }
             .addOnFailureListener { e ->
@@ -93,6 +104,7 @@ class TransactionViewModel : ViewModel() {
             .get()
             .addOnSuccessListener { result ->
                 val sum = result.documents.sumOf { it.getLong("amount")?.toInt() ?: 0 }
+                Log.d("SaveSmart", "Total income: $sum")
                 _totalIncome.value = sum
             }
             .addOnFailureListener { e ->
@@ -113,6 +125,7 @@ class TransactionViewModel : ViewModel() {
             .get()
             .addOnSuccessListener { result ->
                 val sum = result.documents.sumOf { it.getLong("amount")?.toInt() ?: 0 }
+                Log.d("SaveSmart", "Total expenses: $sum")
                 _totalExpenses.value = sum
             }
             .addOnFailureListener { e ->
