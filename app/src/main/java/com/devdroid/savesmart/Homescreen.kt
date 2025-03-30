@@ -41,6 +41,10 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.Canvas
 import androidx.navigation.compose.currentBackStackEntryAsState
+//import com.devdroid.savesmart.ui.ExpenseGraph
+import com.devdroid.savesmart.viewmodel.TransactionViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.devdroid.savesmart.ui.TransactionScreen
 
 
 //import com.example.home.ui.theme.HOMETheme
@@ -111,12 +115,19 @@ class Homescreen : ComponentActivity() {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun FinanceTrackerScreen() {
+fun FinanceTrackerScreen(viewModel: TransactionViewModel = viewModel()) {
     val navController = rememberNavController()
-    var totalIncome by remember { mutableStateOf(0) }
-    var totalExpenses by remember { mutableStateOf(0) }
+//    var totalIncome by remember { mutableStateOf(0) }
+//    var totalExpenses by remember { mutableStateOf(0) }
     val navBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry.value?.destination?.route ?: "home" // Default to home if null
+    val totalIncome by viewModel.totalIncome.collectAsState()
+    val totalExpenses by viewModel.totalExpenses.collectAsState(0)
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchTotalIncome()
+        viewModel.fetchTotalExpenses()
+    }
 
     Scaffold(
         bottomBar = { BottomNavigation(navController = navController, currentRoute = currentRoute) }
@@ -138,22 +149,13 @@ fun FinanceTrackerScreen() {
                     IncomeExpenseRow(income = totalIncome, expenses = totalExpenses, navController)
                     SpendFrequencySection()
                     RecentTransactionsSection()
+//                    ExpenseGraph()
                 }
             }
 
-            composable("income") {
-                IncomeScreen(
-                    navController = navController,
-                    onAmountAdded = { amount -> totalIncome += amount }
-                )
-            }
-
-            composable("expense") {
-                ExpenseScreen(
-                    navController = navController,
-                    onAmountAdded = { amount -> totalExpenses += amount }
-                )
-            }
+            composable("income") { IncomeScreen(navController, viewModel) }
+            composable("expense") { ExpenseScreen(navController, viewModel) }
+            composable("transactions") { TransactionScreen(navController, viewModel) }
 
             composable("profile") {
                 ProfileScreen(
