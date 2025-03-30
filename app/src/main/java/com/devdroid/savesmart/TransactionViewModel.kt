@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.devdroid.savesmart.model.Transaction
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,8 +15,11 @@ import java.util.Date
 
 class TransactionViewModel : ViewModel() {
     private val db = Firebase.firestore
+    private val auth = Firebase.auth
+
     private val _transactions = MutableStateFlow<List<Transaction>>(emptyList())
     val transactions: StateFlow<List<Transaction>> = _transactions
+
     private val _totalIncome = MutableStateFlow(0)
     val totalIncome: StateFlow<Int> = _totalIncome
 
@@ -23,7 +27,15 @@ class TransactionViewModel : ViewModel() {
     val totalExpenses: StateFlow<Int> = _totalExpenses
 
     fun addIncome(amount: Int, category: String, onComplete: (Boolean) -> Unit) {
+        val user = auth.currentUser
+        if (user == null) {
+            Log.e("Firestore", "User not logged in")
+            onComplete(false)
+            return
+        }
+
         val incomeData = hashMapOf(
+            "uid" to user.uid,
             "amount" to amount,
             "category" to category,
             "timestamp" to System.currentTimeMillis()
@@ -32,18 +44,25 @@ class TransactionViewModel : ViewModel() {
         db.collection("transactions")
             .add(incomeData)
             .addOnSuccessListener {
-                fetchTotalIncome()  // Refresh total income
-                onComplete(true)    // Success callback
+                fetchTotalIncome()
+                onComplete(true)
             }
             .addOnFailureListener { e ->
                 Log.e("Firestore", "Error adding income", e)
-                onComplete(false)   // Failure callback
+                onComplete(false)
             }
     }
 
-
     fun addExpense(amount: Int, category: String, onComplete: (Boolean) -> Unit) {
+        val user = auth.currentUser
+        if (user == null) {
+            Log.e("Firestore", "User not logged in")
+            onComplete(false)
+            return
+        }
+
         val expenseData = hashMapOf(
+            "uid" to user.uid,
             "amount" to amount,
             "category" to category,
             "timestamp" to System.currentTimeMillis()
@@ -52,17 +71,24 @@ class TransactionViewModel : ViewModel() {
         db.collection("transactions")
             .add(expenseData)
             .addOnSuccessListener {
-                fetchTotalExpenses()  // Refresh total income
-                onComplete(true)    // Success callback
+                fetchTotalExpenses()
+                onComplete(true)
             }
             .addOnFailureListener { e ->
                 Log.e("Firestore", "Error adding expense", e)
-                onComplete(false)   // Failure callback
+                onComplete(false)
             }
     }
 
     fun fetchTotalIncome() {
+        val user = auth.currentUser
+        if (user == null) {
+            Log.e("Firestore", "User not logged in")
+            return
+        }
+
         db.collection("transactions")
+            .whereEqualTo("uid", user.uid)
             .whereGreaterThan("amount", 0)
             .get()
             .addOnSuccessListener { result ->
@@ -75,7 +101,14 @@ class TransactionViewModel : ViewModel() {
     }
 
     fun fetchTotalExpenses() {
+        val user = auth.currentUser
+        if (user == null) {
+            Log.e("Firestore", "User not logged in")
+            return
+        }
+
         db.collection("transactions")
+            .whereEqualTo("uid", user.uid)
             .whereLessThan("amount", 0)
             .get()
             .addOnSuccessListener { result ->
@@ -86,29 +119,16 @@ class TransactionViewModel : ViewModel() {
                 Log.e("Firestore", "Error fetching expenses", e)
             }
     }
-    fun addTransaction(transaction: Transaction) {
-        val transactionData = hashMapOf(
-            "amount" to transaction.amount,
-            "category" to transaction.category,
-            "timestamp" to System.currentTimeMillis()
-        )
 
-//    val db
-        db.collection("transactions")
-            .add(transactionData)
-            .addOnSuccessListener {
-                if (transaction.amount > 0) {
-                    fetchTotalIncome()  // Update income
-                } else {
-                    fetchTotalExpenses()  // Update expenses
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Error adding transaction", e)
-            }
-    }
     fun fetchTransactions() {
+        val user = auth.currentUser
+        if (user == null) {
+            Log.e("Firestore", "User not logged in")
+            return
+        }
+
         db.collection("transactions")
+            .whereEqualTo("uid", user.uid)
             .get()
             .addOnSuccessListener { result ->
                 val transactionList = result.documents.mapNotNull { doc ->
@@ -121,27 +141,20 @@ class TransactionViewModel : ViewModel() {
 
                     if (amount != null && category != null && timestampLong != null) {
                         val timestamp = Timestamp(Date(timestampLong))
-                        Transaction(id, amount, category, type, timestamp, note)
+                        Transaction(
+                            id = id,
+                            amount = amount,
+                            category = category,
+                            type = type,
+                            note = note,
+                            timestamp = timestamp
+                        )
                     } else null
                 }
                 _transactions.value = transactionList
             }
-            .addOnFailureListener { e -> // ✅ Should work here
+            .addOnFailureListener { e ->
                 Log.e("Firestore", "Error fetching transactions", e)
             }
-
     }
-
-//    fun getCategoryIcon(category: String): String {
-//        return when (category) {
-//            "Shopping" -> "🛍️"
-//            "Subscription" -> "📺"
-//            "Food" -> "🍔"
-//            "Salary" -> "💰"
-//            "Transportation" -> "🚗"
-//            else -> "💵"
-//        }
-//    }
-
 }
-

@@ -9,7 +9,9 @@ data class Transaction(
     val type: String = "",
     val date: Timestamp = Timestamp.now(),
     val description: String = "",
-    val icon: String = ""
+    val icon: String = "",
+    val note: String = "", // ✅ Add this field
+    val timestamp: Timestamp = Timestamp.now() // Will be overridden by the actual timestamp when creating the object
 )
 
 

@@ -31,15 +31,12 @@ import java.text.SimpleDateFormat
 @Composable
 fun ExpenseScreen(
     navController: NavController? = null,
-    viewModel: TransactionViewModel,
-//    onAmountAdded: (Int) -> Unit = {}
+    viewModel: TransactionViewModel
 ) {
-//    val transactionViewModel: TransactionViewModel = viewModel()
-
     var amount by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }  // Added description field
     var isCategoryExpanded by remember { mutableStateOf(false) }
-//    var showUpdatedAmount by remember { mutableStateOf(false)
     val context = LocalContext.current
 
     // Date input fields
@@ -48,16 +45,8 @@ fun ExpenseScreen(
     var yearInput by remember { mutableStateOf("") }
 
     val categories = listOf(
-        "Groceries",
-        "Transportation",
-        "Entertainment",
-        "Food & Dining",
-        "Shopping",
-        "Bills & Utilities",
-        "Healthcare",
-        "Education",
-        "Travel",
-        "Other"
+        "Groceries", "Transportation", "Entertainment", "Food & Dining",
+        "Shopping", "Bills & Utilities", "Healthcare", "Education", "Travel", "Other"
     )
 
     Column(
@@ -66,68 +55,25 @@ fun ExpenseScreen(
             .background(Color(0xFFFF4558))
     ) {
         TopAppBar(
-            title = {
-                Text(
-                    text = "Add Expense",
-                    style = TextStyle(
-                        color = Color.White,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                )
-            },
+            title = { Text("Add Expense", style = TextStyle(color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)) },
             navigationIcon = {
                 IconButton(onClick = { navController?.navigateUp() }) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White
-                    )
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color(0xFFFF4558)
-            )
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFFFF4558))
         )
 
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp)
+            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp)
         ) {
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(vertical = 32.dp)
-//            ) {
-//                Text(
-//                    text = if (showUpdatedAmount) "Updated Amount" else "Enter Amount",
-//                    style = TextStyle(
-//                        color = Color.White.copy(alpha = 0.8f),
-//                        fontSize = 18.sp,
-//                        fontWeight = FontWeight.Medium
-//                    ),
-//                    modifier = Modifier.padding(bottom = 12.dp)
-//                )
-//                Text(
-//                    text = if (amount.isEmpty()) "$0.00" else "$$amount",
-//                    style = TextStyle(
-//                        color = Color.White,
-//                        fontSize = 52.sp,
-//                        fontWeight = FontWeight.Bold
-//                    )
-//                )
-//            }
-
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
                 color = Color.White
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
+                    modifier = Modifier.fillMaxSize().padding(24.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     OutlinedTextField(
@@ -145,6 +91,7 @@ fun ExpenseScreen(
                         )
                     )
 
+                    // Category Dropdown
                     ExposedDropdownMenuBox(
                         expanded = isCategoryExpanded,
                         onExpandedChange = { isCategoryExpanded = it }
@@ -155,9 +102,7 @@ fun ExpenseScreen(
                             readOnly = true,
                             placeholder = { Text("Select Category") },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isCategoryExpanded) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(),
+                            modifier = Modifier.fillMaxWidth().menuAnchor(),
                             shape = RoundedCornerShape(12.dp),
                             colors = TextFieldDefaults.outlinedTextFieldColors(
                                 containerColor = Color(0xFFF5F5F5),
@@ -183,16 +128,30 @@ fun ExpenseScreen(
                         }
                     }
 
+                    // Description Field
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        placeholder = { Text("Enter Description") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = Color(0xFFF5F5F5),
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = Color(0xFF6C63FF),
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black
+                        )
+                    )
+
+                    // Date Input Fields
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         OutlinedTextField(
                             value = dayInput,
-                            onValueChange = {
-                                if (it.length <= 2 && it.all { char -> char.isDigit() }) dayInput =
-                                    it
-                            },
+                            onValueChange = { if (it.length <= 2 && it.all { char -> char.isDigit() }) dayInput = it },
                             placeholder = { Text("DD") },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
@@ -207,10 +166,7 @@ fun ExpenseScreen(
 
                         OutlinedTextField(
                             value = monthInput,
-                            onValueChange = {
-                                if (it.length <= 2 && it.all { char -> char.isDigit() }) monthInput =
-                                    it
-                            },
+                            onValueChange = { if (it.length <= 2 && it.all { char -> char.isDigit() }) monthInput = it },
                             placeholder = { Text("MM") },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
@@ -225,10 +181,7 @@ fun ExpenseScreen(
 
                         OutlinedTextField(
                             value = yearInput,
-                            onValueChange = {
-                                if (it.length <= 4 && it.all { char -> char.isDigit() }) yearInput =
-                                    it
-                            },
+                            onValueChange = { if (it.length <= 4 && it.all { char -> char.isDigit() }) yearInput = it },
                             placeholder = { Text("YYYY") },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
@@ -242,31 +195,25 @@ fun ExpenseScreen(
                         )
                     }
 
+                    // Submit Button
                     Button(
                         onClick = {
                             if (amount.isEmpty() || category.isEmpty() || dayInput.isEmpty() || monthInput.isEmpty() || yearInput.isEmpty()) {
-                                Toast.makeText(
-                                    context,
-                                    "Please fill all fields",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                             } else {
                                 val dateString = "$dayInput/$monthInput/$yearInput"
                                 val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                                 val dateObject: Date? = sdf.parse(dateString)
 
-                                val firebaseTimestamp: Timestamp = if (dateObject != null) {
-                                    Timestamp(dateObject)
-                                } else {
-                                    Timestamp.now() // Use current time if parsing fails
-                                }
+                                val firebaseTimestamp: Timestamp = dateObject?.let { Timestamp(it) } ?: Timestamp.now()
 
                                 val transaction = Transaction(
                                     id = UUID.randomUUID().toString(),
-                                    amount = amount.toInt(),
+                                    amount = -amount.toInt(),  // Ensuring amount is stored as negative
                                     category = category,
+                                    note = description,  // Saving description
                                     type = "Expense",
-                                    date = firebaseTimestamp // ✅ Pass Timestamp instead of String
+                                    date = firebaseTimestamp
                                 )
 
                                 viewModel.addExpense(
@@ -274,15 +221,10 @@ fun ExpenseScreen(
                                     transaction.category
                                 ) { success ->
                                     if (success) {
-                                        Toast.makeText(context, "Expense added!", Toast.LENGTH_SHORT)
-                                            .show()
+                                        Toast.makeText(context, "Expense added!", Toast.LENGTH_SHORT).show()
                                         navController?.navigateUp()
                                     } else {
-                                        Toast.makeText(
-                                            context,
-                                            "Failed to add income",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                                        Toast.makeText(context, "Failed to add expense", Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             }
@@ -297,6 +239,7 @@ fun ExpenseScreen(
         }
     }
 }
+
 
 
 
