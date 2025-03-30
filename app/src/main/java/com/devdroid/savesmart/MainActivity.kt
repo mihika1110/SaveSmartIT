@@ -25,3 +25,31 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+//import android.os.Bundle
+//import android.util.Log
+//import androidx.activity.ComponentActivity
+//import com.google.firebase.firestore.FirebaseFirestore
+//
+//class MainActivity : ComponentActivity() {
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//
+//        val db = FirebaseFirestore.getInstance()
+//
+//        // Testing Firestore Connection: Writing Data
+//        val testData = hashMapOf(
+//            "name" to "Expense Tracker",
+//            "status" to "Connected"
+//        )
+//
+//        db.collection("test").add(testData)
+//            .addOnSuccessListener { documentReference ->
+//                Log.d("FirestoreTest", "Document added with ID: ${documentReference.id}")
+//            }
+//            .addOnFailureListener { e ->
+//                Log.e("FirestoreTest", "Error adding document", e)
+//            }
+//    }
+//}
+

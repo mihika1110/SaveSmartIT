@@ -42,6 +42,11 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.Canvas
 import androidx.navigation.compose.currentBackStackEntryAsState
+//import com.devdroid.savesmart.ui.ExpenseGraph
+import com.devdroid.savesmart.viewmodel.TransactionViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.devdroid.savesmart.ui.TransactionItem
+import com.devdroid.savesmart.ui.TransactionScreen
 
 
 //import com.example.home.ui.theme.HOMETheme
@@ -112,12 +117,20 @@ class Homescreen : ComponentActivity() {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun FinanceTrackerScreen() {
+fun FinanceTrackerScreen(viewModel: TransactionViewModel = viewModel()) {
     val navController = rememberNavController()
-    var totalIncome by remember { mutableStateOf(0) }
-    var totalExpenses by remember { mutableStateOf(0) }
+//    var totalIncome by remember { mutableStateOf(0) }
+//    var totalExpenses by remember { mutableStateOf(0) }
     val navBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry.value?.destination?.route ?: "home" // Default to home if null
+    val totalIncome by viewModel.totalIncome.collectAsState()
+    val totalExpenses by viewModel.totalExpenses.collectAsState(0)
+
+    LaunchedEffect(true) {
+        viewModel.fetchTotalIncome()
+        viewModel.fetchTotalExpenses()
+    }
+
 
     Scaffold(
         bottomBar = { BottomNavigation(navController = navController, currentRoute = currentRoute) }
@@ -138,23 +151,14 @@ fun FinanceTrackerScreen() {
                     AccountBalance(balance = totalIncome - totalExpenses)
                     IncomeExpenseRow(income = totalIncome, expenses = totalExpenses, navController)
                     SpendFrequencySection()
-                    RecentTransactionsSection()
+                    RecentTransactionsSection(viewModel)
+//                    ExpenseGraph()
                 }
             }
 
-            composable("income") {
-                IncomeScreen(
-                    navController = navController,
-                    onAmountAdded = { amount -> totalIncome += amount }
-                )
-            }
-
-            composable("expense") {
-                ExpenseScreen(
-                    navController = navController,
-                    onAmountAdded = { amount -> totalExpenses += amount }
-                )
-            }
+            composable("income") { IncomeScreen(navController, viewModel) }
+            composable("expense") { ExpenseScreen(navController, viewModel) }
+            composable("transactions") { TransactionScreen(navController, viewModel) }
 
             composable("profile") {
                 ProfileScreen(
@@ -560,7 +564,11 @@ fun SpendFrequencySection() {
 }
 
 @Composable
-fun RecentTransactionsSection() {
+fun RecentTransactionsSection(viewModel: TransactionViewModel) {
+    val transactions by viewModel.transactions.collectAsState(initial = emptyList())
+
+    val recentTransactions = transactions.sortedByDescending { it.timestamp.seconds }.take(1)
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -572,12 +580,12 @@ fun RecentTransactionsSection() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Recent Transaction",
+                text = "Recent Transactions",
                 style = MaterialTheme.typography.titleMedium,
                 color = Color.Black
             )
             TextButton(
-                onClick = { /* TODO */ },
+                onClick = { /* TODO: Navigate to full transaction screen */ },
                 colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFF6949FF))
             ) {
                 Text(
@@ -593,107 +601,22 @@ fun RecentTransactionsSection() {
             }
         }
 
-        // Shopping transaction
-        TransactionItem(
-            iconBackgroundColor = Color(0xFFFFF4D9), // Light yellow
-            icon = Icons.Default.ShoppingCart,
-            iconTint = Color(0xFFFF9800), // Orange
-            title = "Shopping",
-            subtitle = "Buy some grocery",
-            amount = -120,
-            time = "10:00 AM"
-        )
-
-        // Subscription transaction
-        TransactionItem(
-            iconBackgroundColor = Color(0xFFE8E5FF), // Light purple
-            icon = Icons.Default.Subscriptions,
-            iconTint = Color(0xFF6949FF), // Purple
-            title = "Subscription",
-            subtitle = "Disney+ Annual",
-            amount = -80,
-            time = "03:30 PM"
-        )
-
-        // Food transaction
-        TransactionItem(
-            iconBackgroundColor = Color(0xFFFFE8E8), // Light red
-            icon = Icons.Default.Restaurant,
-            iconTint = Color(0xFFFF5252), // Red
-            title = "Food",
-            subtitle = "Buy a ramen",
-            amount = -32,
-            time = "07:30 PM"
-        )
-    }
-}
-
-@Composable
-fun TransactionItem(
-    iconBackgroundColor: Color,
-    icon: ImageVector,
-    iconTint: Color,
-    title: String,
-    subtitle: String,
-    amount: Int,
-    time: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .background(
-                    color = iconBackgroundColor,
-                    shape = RoundedCornerShape(12.dp)
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = iconTint,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 16.dp)
-        ) {
+        if (recentTransactions.isNotEmpty()) {
+            recentTransactions.forEach { transaction ->
+                TransactionItem(transaction = transaction)
+            }
+        } else {
             Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.Black
-            )
-            Text(
-                text = subtitle,
+                text = "No recent transactions",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
-        }
-
-        Column(
-            horizontalAlignment = Alignment.End
-        ) {
-            Text(
-                text = if (amount < 0) "-$${-amount}" else "+$${amount}",
-                style = MaterialTheme.typography.bodyLarge,
-                color = if (amount < 0) Color.Red else Color(0xFF4CAF50) // Red for negative, green for positive
-            )
-            Text(
-                text = time,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
     }
 }
+
+
 
 //@Composable
 //fun BottomNavigation() {
