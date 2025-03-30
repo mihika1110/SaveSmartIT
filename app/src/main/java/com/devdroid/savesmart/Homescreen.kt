@@ -43,6 +43,7 @@ import com.devdroid.savesmart.viewmodel.TransactionViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.devdroid.savesmart.ui.TransactionItem
 import com.devdroid.savesmart.ui.TransactionScreen
+import java.util.Calendar
 
 class Homescreen : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -65,14 +66,13 @@ fun FinanceTrackerScreen(viewModel: TransactionViewModel = viewModel()) {
     val currentRoute = navBackStackEntry.value?.destination?.route ?: "home" // Default to home if null
     
     // Collect income and expense values from the view model
-    val totalIncome by viewModel.totalIncome.collectAsState()
-    val totalExpenses by viewModel.totalExpenses.collectAsState()
+    val totalIncome by viewModel.totalIncome.collectAsState(0)
+    val totalExpenses by viewModel.totalExpenses.collectAsState(0)
+    val netBalance = totalIncome + totalExpenses
 
-    // Fetch data when screen first loads and when navigation changes
+    // Fetch data when screen first loads
     LaunchedEffect(Unit) {
-        viewModel.fetchTotalIncome()
-        viewModel.fetchTotalExpenses()
-        viewModel.fetchTransactions()
+        viewModel.fetchAllTransactions()
     }
 
     Scaffold(
@@ -93,10 +93,10 @@ fun FinanceTrackerScreen(viewModel: TransactionViewModel = viewModel()) {
                     TopBar()
                     
                     // Display the account balance (income + expenses)
-                    AccountBalance(balance = totalIncome + totalExpenses) 
+                    AccountBalance(balance = netBalance)
                     
                     // Pass income and expense values to the row
-                    IncomeExpenseRow(income = totalIncome, expenses = totalExpenses, navController)
+                    IncomeExpenseRow(totalIncome, totalExpenses, navController)
                     SpendFrequencySection()
                     RecentTransactionsSection(viewModel, navController)
                 }
