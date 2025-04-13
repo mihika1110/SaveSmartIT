@@ -13,6 +13,3 @@ data class Transaction(
     val note: String = "", // ✅ Add this field
     val timestamp: Timestamp = Timestamp.now() // Will be overridden by the actual timestamp when creating the object
 )
-
-
-
