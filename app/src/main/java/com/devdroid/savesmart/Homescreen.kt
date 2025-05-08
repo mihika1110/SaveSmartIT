@@ -1,3 +1,13 @@
+
+
+
+
+
+
+
+
+
+
 package com.devdroid.savesmart
 
 import BudgetScreen
@@ -35,8 +45,9 @@ import androidx.compose.foundation.Canvas
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.devdroid.savesmart.viewmodel.TransactionViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.devdroid.savesmart.ui.TransactionItem
-import com.devdroid.savesmart.ui.TransactionScreen
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.devdroid.savesmart.utils.DateUtils
 
 class Homescreen : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -63,7 +74,7 @@ fun FinanceTrackerScreen(
     val navController = rememberNavController()
     val navBackStackEntry = navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry.value?.destination?.route ?: "home" // Default to home if null
-    
+
     // Collect income and expense values from the view model
     val totalIncome by viewModel.totalIncome.collectAsState(0)
     val totalExpenses by viewModel.totalExpenses.collectAsState(0)
@@ -90,10 +101,10 @@ fun FinanceTrackerScreen(
                         .padding(16.dp)
                 ) {
                     TopBar()
-                    
+
                     // Display the account balance (income + expenses)
                     AccountBalance(balance = netBalance)
-                    
+
                     // Pass income and expense values to the row
                     IncomeExpenseRow(totalIncome, totalExpenses, navController)
                     SpendFrequencySection()
@@ -119,6 +130,15 @@ fun FinanceTrackerScreen(
             composable("help") { HelpScreen(navController) }
             composable("budget") { BudgetScreen(navController, budgetViewModel) }
             composable("detailedBudgetScreen") { DetailedBudgetScreen(budgetViewModel) }
+
+            // Add the financial report screen route
+            composable(
+                "financialReport/{month}",
+                arguments = listOf(navArgument("month") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val month = backStackEntry.arguments?.getString("month") ?: DateUtils.getCurrentMonthYear()
+                FinancialReportScreen(navController, viewModel, month)
+            }
         }
     }
 }

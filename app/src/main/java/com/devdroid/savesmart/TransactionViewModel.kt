@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.Date
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class TransactionViewModel : ViewModel() {
     private val db = Firebase.firestore
@@ -25,6 +27,13 @@ class TransactionViewModel : ViewModel() {
 
     private val _totalExpenses = MutableStateFlow(0)
     val totalExpenses: StateFlow<Int> = _totalExpenses
+
+    // New StateFlows for financial report data
+    private val _maxExpenseCategory = MutableStateFlow<Pair<String, Int>?>(null)
+    val maxExpenseCategory: StateFlow<Pair<String, Int>?> = _maxExpenseCategory
+
+    private val _maxIncomeCategory = MutableStateFlow<Pair<String, Int>?>(null)
+    val maxIncomeCategory: StateFlow<Pair<String, Int>?> = _maxIncomeCategory
 
     fun addIncome(amount: Int, category: String, note: String = "", onComplete: (Boolean) -> Unit) {
         val user = auth.currentUser
@@ -115,10 +124,10 @@ class TransactionViewModel : ViewModel() {
                         } else {
                             expenseSum += amount // This will add a negative number
                         }
-                        
+
                         val type = if (amount < 0) "Expense" else "Income"
                         val timestamp = Timestamp(Date(timestampLong))
-                        
+
                         Transaction(
                             id = id,
                             amount = amount,
@@ -129,12 +138,12 @@ class TransactionViewModel : ViewModel() {
                         )
                     } else null
                 }
-                
+
                 // Update all state flows
                 _transactions.value = transactionList
                 _totalIncome.value = incomeSum
                 _totalExpenses.value = expenseSum
-                
+
                 Log.d("SaveSmart", "Fetched transactions: ${transactionList.size}, Income: $incomeSum, Expenses: $expenseSum")
             }
             .addOnFailureListener { e ->
@@ -142,15 +151,65 @@ class TransactionViewModel : ViewModel() {
             }
     }
 
+    // Get transactions for a specific month
+    fun getTransactionsForMonth(month: String): List<Transaction> {
+        return _transactions.value.filter {
+            SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+                .format(Date(it.timestamp.seconds * 1000)) == month
+        }
+    }
+
+    // Calculate max expense category for a given month
+    fun calculateMaxExpenseCategory(month: String) {
+        val monthlyTransactions = getTransactionsForMonth(month)
+
+        // Group expenses by category and sum amounts
+        val expensesByCategory = monthlyTransactions
+            .filter { it.amount < 0 } // Only expenses (negative amounts)
+            .groupBy { it.category }
+            .mapValues { (_, transactions) ->
+                transactions.sumOf { Math.abs(it.amount) }
+            }
+
+        // Find category with max expense
+        val maxCategory = expensesByCategory.maxByOrNull { it.value }
+
+        _maxExpenseCategory.value = maxCategory?.let { Pair(it.key, it.value) }
+    }
+
+    // Calculate max income category for a given month
+    fun calculateMaxIncomeCategory(month: String) {
+        val monthlyTransactions = getTransactionsForMonth(month)
+
+        // Group incomes by category and sum amounts
+        val incomesByCategory = monthlyTransactions
+            .filter { it.amount > 0 } // Only incomes (positive amounts)
+            .groupBy { it.category }
+            .mapValues { (_, transactions) ->
+                transactions.sumOf { it.amount }
+            }
+
+        // Find category with max income
+        val maxCategory = incomesByCategory.maxByOrNull { it.value }
+
+        _maxIncomeCategory.value = maxCategory?.let { Pair(it.key, it.value) }
+    }
+
+    // Calculate financial report data for a specific month
+    fun calculateFinancialReportData(month: String) {
+        calculateMaxExpenseCategory(month)
+        calculateMaxIncomeCategory(month)
+    }
+
     // The following methods are kept for compatibility but now just call fetchAllTransactions
     fun fetchTransactions() {
         fetchAllTransactions()
     }
-    
+
     fun fetchTotalIncome() {
         fetchAllTransactions()
     }
-    
+
     fun fetchTotalExpenses() {
         fetchAllTransactions()
     }
