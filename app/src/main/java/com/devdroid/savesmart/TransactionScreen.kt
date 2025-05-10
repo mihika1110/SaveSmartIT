@@ -1,4 +1,4 @@
-package com.devdroid.savesmart
+package com.devdroid.savesmart.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,12 +16,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.devdroid.savesmart.R
 import com.devdroid.savesmart.model.Transaction
-import com.devdroid.savesmart.utils.DateUtils.getCurrentMonthYear
 import com.devdroid.savesmart.viewmodel.TransactionViewModel
 import java.text.SimpleDateFormat
 import java.util.*
-///hello
+
 @Composable
 fun TransactionScreen(navController: NavController, transactionViewModel: TransactionViewModel = viewModel()) {
     val transactions by transactionViewModel.transactions.collectAsState()
@@ -34,7 +34,7 @@ fun TransactionScreen(navController: NavController, transactionViewModel: Transa
             .fillMaxSize()
             .background(Color(0xFFF8F8F0)) // Light cream background
     ) {
-        var selectedMonth by remember { mutableStateOf<String>(getCurrentMonthYear()) }
+        var selectedMonth by remember { mutableStateOf(getCurrentMonthYear()) }
         val filteredTransactions = transactions.filter {
             SimpleDateFormat(
                 "MMMM yyyy",
@@ -47,21 +47,21 @@ fun TransactionScreen(navController: NavController, transactionViewModel: Transa
             .sortedByDescending { it.timestamp.seconds }
             .groupBy { transaction ->
                 val transactionDate = Date(transaction.timestamp.seconds * 1000)
-
+                
                 // Create calendar instances with the default timezone
                 val today = Calendar.getInstance()
                 val yesterday = Calendar.getInstance()
                 yesterday.add(Calendar.DAY_OF_YEAR, -1)
-
+                
                 // Reset time part to start of day for comparison
                 clearTimeFields(today)
                 clearTimeFields(yesterday)
-
+                
                 // Create a calendar for transaction date
                 val transactionCal = Calendar.getInstance()
                 transactionCal.time = transactionDate
                 clearTimeFields(transactionCal)
-
+                
                 // Compare dates
                 when {
                     // Same day as today
@@ -72,20 +72,20 @@ fun TransactionScreen(navController: NavController, transactionViewModel: Transa
                     else -> SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(transactionDate)
                 }
             }
-
+            
         // Create a sorted map to ensure correct display order (Today, Yesterday, then dates in descending order)
         val groupedTransactions = LinkedHashMap<String, List<Transaction>>()
-
+        
         // First add Today if it exists
         if (transactionsByDate.containsKey("Today")) {
             groupedTransactions["Today"] = transactionsByDate["Today"]!!
         }
-
+        
         // Then add Yesterday if it exists
         if (transactionsByDate.containsKey("Yesterday")) {
             groupedTransactions["Yesterday"] = transactionsByDate["Yesterday"]!!
         }
-
+        
         // Then add all other dates in descending order
         transactionsByDate
             .filter { it.key != "Today" && it.key != "Yesterday" }
@@ -110,8 +110,8 @@ fun TransactionScreen(navController: NavController, transactionViewModel: Transa
 
             Spacer(modifier = Modifier.height(16.dp)) // Increased spacing
 
-            // Financial Report Box - Pass navController and selectedMonth
-            FinancialReportBox(navController, selectedMonth)
+            // Financial Report Box
+            FinancialReportBox()
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -165,7 +165,7 @@ fun MonthDropdown(selectedMonth: String, onMonthSelected: (String) -> Unit) {
             color = Color.Gray,
             modifier = Modifier.padding(end = 16.dp)
         )
-
+        
         Box {
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -185,7 +185,7 @@ fun MonthDropdown(selectedMonth: String, onMonthSelected: (String) -> Unit) {
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.weight(1f)
                     )
-
+                    
                     Icon(
                         painter = painterResource(id = if (expanded) R.drawable.ic_arrow_right else R.drawable.ic_arrow_right),
                         contentDescription = "Dropdown Arrow",
@@ -195,7 +195,7 @@ fun MonthDropdown(selectedMonth: String, onMonthSelected: (String) -> Unit) {
                     )
                 }
             }
-
+            
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
@@ -203,13 +203,13 @@ fun MonthDropdown(selectedMonth: String, onMonthSelected: (String) -> Unit) {
             ) {
                 months.forEach { month ->
                     DropdownMenuItem(
-                        text = {
+                        text = { 
                             Text(
                                 text = month,
                                 fontSize = 16.sp,
                                 fontWeight = if (month == selectedMonth) FontWeight.Bold else FontWeight.Normal,
                                 color = if (month == selectedMonth) Color(0xFF6200EE) else Color.Black
-                            )
+                            ) 
                         },
                         onClick = {
                             onMonthSelected(month)
@@ -224,15 +224,11 @@ fun MonthDropdown(selectedMonth: String, onMonthSelected: (String) -> Unit) {
 
 // Financial Report Box
 @Composable
-fun FinancialReportBox(navController: NavController, selectedMonth: String) {
+fun FinancialReportBox() {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable {
-                // Navigate to the Financial Report Screen with the selected month
-                navController.navigate("financialReport/$selectedMonth")
-            },
+            .padding(vertical = 8.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFF0E6FF)), // Light purple background to match image
         elevation = CardDefaults.cardElevation(2.dp),
         shape = MaterialTheme.shapes.medium
@@ -249,7 +245,7 @@ fun FinancialReportBox(navController: NavController, selectedMonth: String) {
                 color = Color(0xFF6200EE), // Purple text
                 modifier = Modifier.align(Alignment.CenterStart)
             )
-
+            
             Icon(
                 painter = painterResource(id = R.drawable.ic_arrow_right),
                 contentDescription = "View Report",
@@ -263,10 +259,9 @@ fun FinancialReportBox(navController: NavController, selectedMonth: String) {
 }
 
 // Function to get the current month in "MMMM yyyy" format
-// Remove this function
-// fun getCurrentMonthYear(): String {
-//     return SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date())
-// }
+fun getCurrentMonthYear(): String {
+    return SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date())
+}
 
 // Function to get last six months in "MMMM yyyy" format
 fun getLastSixMonths(): List<String> {
@@ -379,5 +374,5 @@ fun clearTimeFields(calendar: Calendar) {
 // Helper function to check if two calendar dates are the same day
 fun isSameDay(cal1: Calendar, cal2: Calendar): Boolean {
     return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-            cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
+           cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
 }
